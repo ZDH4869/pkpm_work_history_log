@@ -11,6 +11,7 @@ class 太阳能集热器(Component):
         self['底边长度'] = Attr(1000.0, obvious=True)
         self['支撑板倾角'] = Attr(45.0, obvious=True)
         self['集水管长度'] = Attr(1500.0, obvious=True)
+        self['集水管直径'] = Attr(150.0, obvious=True)
 
         # ========== 显示参数 ==========
         self['圆心距离'] = Attr(1414.0,  obvious=True, readonly=True, show=True)
@@ -20,14 +21,16 @@ class 太阳能集热器(Component):
         self['集热器'] = Attr(None, show=True)
 
         # ========== 驱动点 ==========
-        self.setDrivenFeaturePoint('下集水管左圆心', SnapMode.GeometricCenter, '0', '0', '75')
-        self.setDrivenFeaturePoint('下集水管右圆心', SnapMode.GeometricCenter, '[集水管长度]', '0', '75')
-        self.setDrivenFeaturePoint(
-            '上集水管左圆心', SnapMode.GeometricCenter,
-            '0', '[底边长度]', '75 + [底边长度] * tan([支撑板倾角] * 3.14159265 / 180.0)')
-        self.setDrivenFeaturePoint(
-            '上集水管右圆心', SnapMode.GeometricCenter,
-            '[集水管长度]', '[底边长度]', '75 + [底边长度] * tan([支撑板倾角] * 3.14159265 / 180.0)')
+        self.setDrivenFeaturePoint('下集水管左圆心', SnapMode.GeometricCenter,
+            '[定位点X]', '[定位点Y]', '[定位点Z]+[集水管直径]/2')
+        self.setDrivenFeaturePoint('下集水管右圆心', SnapMode.GeometricCenter,
+            '[定位点X]+[集水管长度]', '[定位点Y]', '[定位点Z]+[集水管直径]/2')
+        self.setDrivenFeaturePoint('上集水管左圆心', SnapMode.GeometricCenter,
+            '[定位点X]', '[定位点Y]+[底边长度]',
+            '[定位点Z]+[集水管直径]/2+[底边长度]*tan([支撑板倾角]*3.14159265/180.0)')
+        self.setDrivenFeaturePoint('上集水管右圆心', SnapMode.GeometricCenter,
+            '[定位点X]+[集水管长度]', '[定位点Y]+[底边长度]',
+            '[定位点Z]+[集水管直径]/2+[底边长度]*tan([支撑板倾角]*3.14159265/180.0)')
 
         self.replace()
 
@@ -36,10 +39,10 @@ class 太阳能集热器(Component):
         base = self['底边长度']
         angle_deg = self['支撑板倾角']
         cyl_len = self['集水管长度']
+        D_main = self['集水管直径']
         angle = angle_deg * pi / 180.0
 
         # ========== 派生尺寸 ==========
-        D_main = 150.0
         R_main = D_main / 2.0
         height = base * tan(angle)
         hypotenuse = sqrt(base**2 + height**2)

@@ -11,7 +11,7 @@ class 基础热水器(Component):
         self['水箱直径'] = Attr(1000.0, obvious=True)
         self['水箱高度'] = Attr(1200.0, obvious=True)
         self['集水管直径'] = Attr(100.0, obvious=True)      # B 和 D 共用直径
-        self['集水管长度'] = Attr(1000.0, obvious=True)     # X 向单侧拉伸长度
+        self['集水管长度'] = Attr(2000.0, obvious=True)     # X 向总长度
         self['排架倾角'] = Attr(45.0, obvious=True)           # 度，Y 轴向 Z 轴偏转
         self['排架管直径'] = Attr(50.0, obvious=True)
         self['排架管间距'] = Attr(185.5, obvious=True)       # 随B长度变化可调
@@ -44,8 +44,8 @@ class 基础热水器(Component):
 
         D_BD = self['集水管直径']
         R_BD = D_BD / 2.0
-        L_BD = self['集水管长度']           # 圆柱 B/D 沿 X 单侧拉伸距离
-        L_BD = L_BD/2.0
+        L_BD_total = self['集水管长度']     # 总长度
+        L_BD = L_BD_total / 2.0            # 半长（X 向单侧拉伸距离）
 
         angle_deg = self['排架倾角']
         angle = angle_deg * pi / 180.0
