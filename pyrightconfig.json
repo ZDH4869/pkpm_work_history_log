@@ -1,0 +1,6 @@
+{
+    "python.defaultInterpreterPath": "D:\\BIMbase\\PythonScript\\python-3.7.9-embed-amd64\\python.exe",
+    "python.analysis.extraPaths": [
+        "D:\\BIMbase\\PythonScript\\python-3.7.9-embed-amd64\\Lib\\site-packages"
+    ]
+}

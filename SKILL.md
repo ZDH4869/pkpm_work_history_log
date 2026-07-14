@@ -1,0 +1,288 @@
+---
+name: bimbase-pyp3d-modeling
+description: 使用 BIMBase 的 pyp3d 库进行参数化三维几何建模并生成可运行 Python 脚本时使用。当用户要求创建、编辑、组装 BIMBase 模型/构件（立方体、圆柱、球、圆锥、圆环、椭球、放样、扫掠、布尔运算、参数化组件等），或需要编写继承 Component 的 pyp3d 脚本时，务必加载本技能。核心目标：准确无误地理解用户建模目标与要求，高效准确地产出符合规范的 pyp3d 代码。
+---
+
+# BIMBase pyp3d 建模技能
+
+本技能指导你使用 BIMBase 建模软件的 `pyp3d` 库，把用户的自然语言需求转化为**符合规范、可直接在 BIMBase 内嵌 Python 中运行**的参数化建模脚本。
+
+## 最高准则：先准确理解，再动手编码
+
+**核心目标是准确无误地理解用户的建模目标与要求。** 在写任何代码前，必须先在脑中形成清晰、无歧义的建模意图。遇到任何不清楚的点，严格按下面的「三级解惑协议」处理，绝不带着不确定直接猜着写代码。
+
+### 三级解惑协议（遇到不清楚时按序执行，不可跳级）
+
+1. **第一级 · 检索本项目技能与 MCP**
+   - 先在本技能库 / BIMBase 知识库中检索：`get_summary_document()` → `get_skill_manifest()` → 用别名/关键词定位相关 symbol → `get_skill_doc()` / `get_skill_bundle()` 读取正文。
+   - 未接 MCP 时，查阅本技能的「API 速查」「标准结构」「自定义组件模板」章节。
+   - 涉及 API 签名、参数含义、几何约束、退化风险等**技术性问题**，必须在此级解决，禁止凭记忆猜测。
+
+2. **第二级 · 自主合理推断（仅限非关键项）**
+   - 对**不影响建模正确性**的次要参数（如未指定的颜色、微小位置偏移、截面数等），可补合理默认值并在代码注释中标明假设。
+   - 对**影响几何形状/尺寸/拓扑/装配关系**的关键信息，不得擅自假设，转第三级。
+
+3. **第三级 · 向用户提问澄清**
+   - 当检索无法解决、且信息缺失会导致建模目标有歧义或可能做错时，**必须停下来向用户提问**。
+   - 提问要具体、可选项化、聚焦关键项，例如：尺寸/单位、数量、相对定位、朝向、是否参数化、输出形式（单体/组合/装配）。
+   - 一次把关键疑问集中问清，避免反复打断；用户答复后再继续。
+
+> 判定标准：**"做错的代价" > "问一句的成本"** 时，就去问。宁可多确认一次，也不要交付偏离用户意图的模型。
+
+## 核心原则（不可违反）
+
+1. **绝对不要凭记忆猜测函数名或参数**。`pyp3d` 与任何常规 Python 库都不同。使用任一 API 前，必须先通过检索工具/知识库确认其签名与用法。
+2. **单位默认 mm，角度默认弧度制，坐标系为右手系**。
+3. **一个脚本文件只能定义一个继承 `Component` 的类**。
+4. **Vec2 与 Vec3 不能混用**；截面 `Section` 只接受 Vec2/二维 Line/Arc，禁止 Vec3。
+
+## 工作流（按序执行）
+
+### Step 0 — 理解与确认需求（最先做）
+- 从用户需求中提取：物体类型、尺寸、位置、朝向、颜色、参数清单、参数范围、几何约束、装配关系、异常边界、输出形式。
+- 复述/在心中固化建模目标；识别缺失或歧义项。
+- 对缺失/歧义项启动「三级解惑协议」：先检索 → 次要项合理推断 → 关键项向用户提问。
+- **只有当建模目标清晰无歧义后，才进入 Step 1。**
+
+### Step 1 — 检索与规划
+- 若接入了 BIMBase MCP Server，优先调用：
+  1. `get_summary_document()` — 首次建模必调，了解全部可用 SDK 与文档路径。
+  2. `get_skill_manifest()` — 获取结构化 symbol 索引（名称、路径、别名、关键词、依赖）。
+- 规划需要组合哪些 API（如 `Cube` + `Bool`，`Section` + `Loft`）。
+
+### Step 2 — 批量获取文档
+- 调用 `get_skill_bundle(symbols=["Cube","Sweep","Bool"])` 一次性取回所需文档正文（会自动附带编码规范 `basic_writing_style`）。
+- 需要配套函数时调用 `get_related_skills(symbol)`。
+- 单个查询用 `get_skill_doc(symbol)`。
+- 若检索后仍存在技术性疑问，回到「三级解惑协议」相应层级处理。
+
+> 未接 MCP 时：从本技能第「API 速查」与「代码模板」章节取用，仍须遵守全部规范。
+
+### Step 3 — 生成代码
+- 严格套用「标准结构」，用 `@export` 的 `replace()` 承载造型逻辑。
+- 参数用 `self['名']` 读取，不写死数值；对已确认的次要缺省项补合理默认值并注释假设。
+- 复杂几何（椭球、圆环）优先复用「自定义组件模板」。
+
+### Step 4 — 自检
+逐项核对「输出前检查清单」，尤其是文件结构、维度一致性、单位与弧度；确认成品与 Step 0 固化的建模目标一致。
+
+## 标准结构（必须遵循）
+
+```python
+from pyp3d import *
+
+class pythonModel(Component):
+    def __init__(self):
+        Component.__init__(self)
+        # 参数定义：obvious True=可见（默认False），readonly True=置灰不可调（默认False），combo 下拉，show 输出槽位
+        self['长'] = Attr(1000, obvious=True, combo=[500,1000,2000,3000,4000])
+        self['宽'] = Attr(300.0, obvious=True)
+        self['高'] = Attr(500, obvious=True)
+        self['长方体'] = Attr(None, show=True)   # 最终几何输出槽位，默认 None
+        self.replace()
+
+    @export
+    def replace(self):
+        L = self['长']
+        W = self['宽']
+        H = self['高']
+        result = scale(L, W, H) * Cube()
+        self['长方体'] = result
+
+if __name__ == "__main__":
+    FinalGeometry = pythonModel()
+    place(FinalGeometry)
+```
+
+**结构要点**
+- 顶部必须 `from pyp3d import *`。
+- `Attr(value, obvious=False, readonly=False, combo=None, show=False)`
+  - `obvious` 属性的可见性：`True` 时可见，`False` 时不可见。默认为 `False`。
+  - `readonly` 属性的只读性：`True` 时不可调，为置灰状态，`False` 时可调。默认为 `False`。
+  - `combo` 下拉选项列表，元素类型须与 value 一致且含默认值；控制标签全小写。
+  - `show=True` 最终几何体输出槽位，默认值填 `None`。
+- `__init__` 末尾调用 `self.replace()`；造型逻辑写在 `@export` 的 `replace(self)` 中（否则参数变化不重算）。
+- 入口 `place(实例)` 才能在视图中显示结果。
+
+## API 速查
+
+### 基础几何体
+- `Cube()` / `scale(L,W,H)*Cube()` — 单位立方体（中心在原点）/长方体。
+- `Sphere()` / `scale(r)*Sphere()` — 球体，仅等比缩放（不支持椭球）。
+- `Cone(centerA, centerB, radiusA, radiusB)` — 圆锥/圆台；`radiusA==radiusB` 时为圆柱。
+- `Box(baseOrigin, topOrigin, vectorX, vectorY, baseX, baseY, topX, topY)` — 任意朝向四棱台，顶底尺寸相同即棱柱/长方体。
+- `Arc(angle)`（单位圆弧，半径1，X轴起点逆时针）/ `Arc(startP, midP, endP)`（三点）。
+- `Line(p1, p2, ...)` — 二维/三维线段（Vec2/Vec3 不混用）。
+- `Text(content, width, height)` — 二维文字；三维文字用 `Sweep(text, Line(Vec3(0,0,0),Vec3(0,0,h)))`。
+
+### 复杂造型
+- `Section(p1, geom1, p2, ...)` — 放样/扫掠截面，默认位于 XOY 平面，仅二维元素。
+- `Loft(sec1, sec2, ..., secN)` — 多截面放样（≥2）；各截面须空间分离、方向一致、开闭一致、分段一一对应（线对线/弧对弧/点对点）。
+- `Sweep(section, path)` — 截面沿轨迹扫掠；**必须旋转截面使其法线对齐轨迹方向**，否则退化为平面；轨迹只能是一段直线或一段圆弧。
+- `combine(a, b, ...)` — 成组，不做布尔融合，保留各自属性/颜色。
+- 布尔：`a - b`（减）、`Intersect(a, b)`（交）；**布尔后颜色被抹除，需重设**。
+- `linspace(a, b, n)` — 等分点序列（n 个点，n-1 份），支持矢量/数值。
+
+### 变换与布置
+- 变换用 `*` 作用于几何体，**从右到左**执行：`translate(x,y,z)` / `trans(...)` / `rotate(axis, rad)` / `rotx|roty|rotz(rad)` / `scale(...)`。
+- `geom.color(R, G, B, Alpha)` — RGBA 均 0~1，链式调用。
+- 布置：`RotationPlace.RotationFunction(g)`（旋转布置）、`TwoPointPlace.linearize(g, '长')`（两点线性布置，线性变量名须与 Attr 名完全一致）。
+- 驱动点：`self.setDrivenFeaturePoint(name, SnapMode.GeometricCenter|EndPoint, 'X表达式','Y表达式','Z表达式')`，在 `replace()` 之前定义。
+- **驱动点表达式规则**：禁止 `*0.5`（用 `/2` 替代）、禁止括号 `()`（展开为加减项）、三轴都必须含 `[定位点X/Y/Z]`、引用的 Attr 建议设为 `obvious=True`。
+
+### 变换示例
+```python
+testcube  = translate(100,100,100) * scale(500,200,400) * Cube()   # 先缩放后平移
+rotatecube = rotate(Vec3(0,0,1), pi/2) * scale(500,200,400) * Cube()
+```
+
+## 自定义组件模板（原生 API 不支持，直接复用）
+
+### 椭球体（Loft 逐层截面放样）
+```python
+from pyp3d import *
+import math
+
+class 椭球体(Component):
+    def __init__(self):
+        Component.__init__(self)
+        self["X半轴"] = Attr(1000.0, obvious=True)
+        self["Y半轴"] = Attr(700.0, obvious=True)
+        self["Z半轴"] = Attr(500.0, obvious=True)
+        self["截面数"] = Attr(25, obvious=True)
+        self["旋转角度"] = Attr(0.0, obvious=True)
+        self["X"] = Attr(0.0, obvious=True)
+        self["Y"] = Attr(0.0, obvious=True)
+        self["Z"] = Attr(0.0, obvious=True)
+        self["椭球"] = Attr(None, show=True)
+        self.replace()
+
+    @export
+    def replace(self):
+        ax = max(float(self["X半轴"]), 1e-3)
+        by = max(float(self["Y半轴"]), 1e-3)
+        cz = max(float(self["Z半轴"]), 1e-3)
+        n = max(int(self["截面数"]), 5)
+        if n % 2 == 0:
+            n += 1
+        sections = []
+        eps = 1e-3
+        for i in range(n):
+            t = -1.0 + 2.0 * i / (n - 1)
+            z = cz * t
+            scale_xy = math.sqrt(max(0.0, 1.0 - t * t))
+            rx = max(ax * scale_xy, eps)
+            ry = max(by * scale_xy, eps)
+            sections.append(translate(0, 0, z) * scale(rx, ry) * Section(Arc(2 * math.pi)))
+        solid = Loft(*sections)
+        solid.smooth = True
+        ang = float(self["旋转角度"]) * math.pi / 180.0
+        self["椭球"] = translate(float(self["X"]), float(self["Y"]), float(self["Z"])) * rotation(ang) * solid
+
+if __name__ == "__main__":
+    place(椭球体())
+```
+
+### 圆形截面圆环（Sweep 沿圆形路径扫掠圆形截面）
+```python
+from pyp3d import *
+import math
+
+class 圆形截面圆环(Component):
+    def __init__(self):
+        Component.__init__(self)
+        self["环半径"] = Attr(1000.0, obvious=True)
+        self["截面半径"] = Attr(120.0, obvious=True)
+        self["旋转角度"] = Attr(0.0, obvious=True)
+        self["X"] = Attr(0.0, obvious=True)
+        self["Y"] = Attr(0.0, obvious=True)
+        self["Z"] = Attr(0.0, obvious=True)
+        self["圆形截面圆环"] = Attr(None, show=True)
+        self.replace()
+
+    @export
+    def replace(self):
+        ring_r = max(float(self["环半径"]), 1.0)
+        tube_r = max(float(self["截面半径"]), 0.1)
+        if ring_r <= tube_r:                      # 避免截面跨过旋转轴退化
+            ring_r = tube_r + 0.1
+        section_2d = translate(ring_r, 0) * scale(tube_r, tube_r) * Section(Arc(2.0 * math.pi))
+        section_3d = rotate(Vec3(1, 0, 0), -0.5 * math.pi) * section_2d
+        path = Line(Arc(2.0 * math.pi))
+        torus = Sweep(section_3d, path)
+        ang = float(self["旋转角度"]) * math.pi / 180.0
+        self["圆形截面圆环"] = translate(float(self["X"]), float(self["Y"]), float(self["Z"])) * rotation(ang) * torus
+
+if __name__ == "__main__":
+    place(圆形截面圆环())
+```
+
+### 方形截面圆环（Sweep 沿圆形路径扫掠方形截面）
+```python
+from pyp3d import *
+import math
+
+class 方形截面圆环(Component):
+    def __init__(self):
+        Component.__init__(self)
+        self["环半径"] = Attr(1000.0, obvious=True)
+        self["截面边长"] = Attr(200.0, obvious=True)
+        self["旋转角度"] = Attr(0.0, obvious=True)
+        self["X"] = Attr(0.0, obvious=True)
+        self["Y"] = Attr(0.0, obvious=True)
+        self["Z"] = Attr(0.0, obvious=True)
+        self["方形截面圆环"] = Attr(None, show=True)
+        self.replace()
+
+    @export
+    def replace(self):
+        ring_r = max(float(self["环半径"]), 1.0)
+        side = max(float(self["截面边长"]), 0.1)
+        half = 0.5 * side
+        if ring_r <= half:
+            ring_r = half + 0.1
+        section_2d = Section(
+            Vec2(ring_r - half, -half),
+            Vec2(ring_r + half, -half),
+            Vec2(ring_r + half, half),
+            Vec2(ring_r - half, half),
+            Vec2(ring_r - half, -half),
+        )
+        section_3d = rotate(Vec3(1, 0, 0), -0.5 * math.pi) * section_2d
+        torus = Sweep(section_3d, Line(Arc(2.0 * math.pi)))
+        ang = float(self["旋转角度"]) * math.pi / 180.0
+        self["方形截面圆环"] = translate(float(self["X"]), float(self["Y"]), float(self["Z"])) * rotation(ang) * torus
+
+if __name__ == "__main__":
+    place(方形截面圆环())
+```
+
+## 多组件内联装配
+
+当用户要求把多个 `.py` 组件合并为一个总装脚本时：
+- **禁止**跨文件类导入（`from a import A`）与动态加载（`importlib`/`exec`/`eval`）。
+- 两组件建模逻辑内联到同一文件；命名冲突用前缀消歧（`comp_a_*`、`comp_b_*`）。
+- 文件结构顺序：公共 import/常量 → 组件A内联区 → 组件B内联区 → 总装定位/组合区 → 统一入口。
+- 交付一个可独立运行的总装 `.py`，在总装层做相对定位（平移/旋转/镜像）并合并输出。
+
+## 输出前检查清单
+
+- [ ] 顶部有 `from pyp3d import *`
+- [ ] 文件中只有一个 `Component` 子类
+- [ ] `replace()` 带 `@export` 装饰器，`__init__` 末尾调用 `self.replace()`
+- [ ] 最终几何赋值给 `Attr(None, show=True)` 槽位
+- [ ] 参数经 `self['名']` 读取，未写死数值
+- [ ] Vec2/Vec3 未混用；`Section` 未传入 Vec3
+- [ ] `Loft` 截面方向/开闭/分段一致且空间分离
+- [ ] `Sweep` 截面法线已旋转对齐轨迹，轨迹为单段直线或圆弧
+- [ ] 布尔运算后已重设颜色
+- [ ] 单位统一 mm，角度用弧度制
+- [ ] 中文变量名多词用 `_` 连接，标点全用英文，参数名无特殊符号/角标
+- [ ] `if __name__ == "__main__":` 下 `place(实例)` 输出
+
+## 执行环境提示
+
+- 生成脚本由 BIMBase **内嵌 Python 3.7.9**（`<BIMBase>\PythonScript\python-3.7.9-embed-amd64\python.exe`）运行，请确保语法兼容。
+- 脚本须含 `if __name__ == "__main__":` 与 `place(...)` 才能布置到视图。
+- 输出完整可独立运行的代码。
+- **缺参数处理遵循「三级解惑协议」**：技术性疑问先检索本项目技能/MCP；不影响正确性的次要项补合理默认值并注释假设；影响几何形状/尺寸/拓扑/装配的关键信息缺失或有歧义时，必须先向用户提问澄清，不得猜着交付。
