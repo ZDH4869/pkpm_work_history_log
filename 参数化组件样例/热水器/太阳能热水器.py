@@ -1,7 +1,8 @@
 from pyp3d import *
 
 # 太阳能热水器 - 截面重建
-# 插入点：出水管左端面圆心 = point1 = ([定位点X]-200, 定位点Y, 定位点Z)
+# 插入点 = point1 = 出水管左端面圆心 = ([定位点X], [定位点Y], [定位点Z])
+# [定位点X/Y/Z] 是 BIMBase 隐式内置变量，不可定义为 Attr
 
 class 太阳能热水器(Component):
     def __init__(self):
@@ -24,34 +25,42 @@ class 太阳能热水器(Component):
         # ========== 隐藏参数（仅内部计算用）==========
         self['水平柱直径'] = Attr(25.0)
         self['水平柱长度'] = Attr(1000.0)
-        self['竖向柱直径'] = Attr(25.0)
+        self['竖向柱直径'] = Attr(25.0, obvious=True, readonly=True)
         self['竖向柱Z起点'] = Attr(-50.0)
         self['竖向柱Z终点'] = Attr(950.0)
         self['排架管直径'] = Attr(50.0)
         self['太阳能板厚'] = Attr(10.0)
         self['圆环路径直径'] = Attr(400.0)                       # 新默认400
         self['圆环截面直径'] = Attr(40.0)                        # 新默认40
-        self['定位点X'] = Attr(200.0)                            # point1 = 定位点X-200 = 0（出水管左端面圆心）
-        self['定位点Y'] = Attr(0.0)
-        self['定位点Z'] = Attr(0.0)
 
         # ========== 输出槽位 ==========
         self['热水器'] = Attr(None, show=True)
 
         # ========== 特征驱动点 ==========
-        # point1 = 出水管左端面圆心 = 插入点  (SnapMode.EndPoint)
+        # 规则：1) 三轴都必须含 [定位点X/Y/Z]  2) 用 /2 替代 *0.5  3) 避免引用负值参数
+        # point1 = 出水管左端面圆心 = 插入点
         self.setDrivenFeaturePoint('point1', SnapMode.EndPoint,
             '[定位点X]', '[定位点Y]', '[定位点Z]')
-        # 左侧水管底圆心：管道 Cone 的底部截面圆心（闭合截面 → GeometricCenter）
+        # 保温桶左端面圆心  实际=(0, 700, 950)
+        self.setDrivenFeaturePoint('保温桶左端面圆心', SnapMode.EndPoint,
+            '[定位点X]+[出水管长度]/2-[保温桶长度]/2',
+            '[定位点Y]+[支撑宽度]-[竖向柱直径]/2-[出水管半径]',
+            '[定位点Z]+[保温桶中心高度]-[保温桶半径]/2-50')
+        # 保温桶右端面圆心  实际=(1500, 700, 950)
+        self.setDrivenFeaturePoint('保温桶右端面圆心', SnapMode.EndPoint,
+            '[定位点X]+[出水管长度]/2+[保温桶长度]/2',
+            '[定位点Y]+[支撑宽度]-[竖向柱直径]/2-[出水管半径]',
+            '[定位点Z]+[保温桶中心高度]-[保温桶半径]/2-50')
+        # 左侧水管底部截面圆心  实际=(150, 700, 650)
         self.setDrivenFeaturePoint('左侧水管底圆心', SnapMode.EndPoint,
-            '[定位点X]+50 + (([集热管数量]-1)*[集热管间距])/2 - ([支撑宽度] - [竖向柱直径]/2 - [出水管半径]) + 100',
-            '[定位点Y]+[支撑宽度] - [竖向柱直径]/2 - [出水管半径]',
-            '[定位点Z]+[竖向柱Z起点] + [保温桶中心高度] - [保温桶半径] - 50')
-        # 右侧水管底圆心：管道 Cone 的底部截面圆心（闭合截面 → GeometricCenter）
+            '[定位点X]+[出水管长度]/2-[支撑宽度]+[竖向柱直径]/2+[出水管半径]+100',
+            '[定位点Y]+[支撑宽度]-[竖向柱直径]/2-[出水管半径]',
+            '[定位点Z]+[保温桶中心高度]-[保温桶半径]-100')
+        # 右侧水管底部截面圆心  实际=(1350, 700, 650)
         self.setDrivenFeaturePoint('右侧水管底圆心', SnapMode.EndPoint,
-            '[定位点X]+50 + (([集热管数量]-1)*[集热管间距])/2 + ([支撑宽度] - [竖向柱直径]/2 - [出水管半径]) - 100',
-            '[定位点Y]+[支撑宽度] - [竖向柱直径]/2 - [出水管半径]',
-            '[定位点Z]+[竖向柱Z起点] + [保温桶中心高度] - [保温桶半径] - 50')
+            '[定位点X]+[出水管长度]/2+[支撑宽度]-[竖向柱直径]/2-[出水管半径]-100',
+            '[定位点Y]+[支撑宽度]-[竖向柱直径]/2-[出水管半径]',
+            '[定位点Z]+[保温桶中心高度]-[保温桶半径]-100')
 
         self.replace()
 
@@ -90,8 +99,11 @@ class 太阳能热水器(Component):
         R_pipe_right = self['右侧水管半径']
 
         # —— 派生量 ——
-        # h_origin 基于定位点：插入点 = 出水管左端面圆心 = (定位点X-200, 定位点Y, 定位点Z)
-        h_origin = (self['定位点X'] + 50.0, self['定位点Y'], self['定位点Z'])
+        # hx 使出水管左端面圆心落在 X=0（插入点位置）
+        # center_X = hx + plate_len_X/2, outlet 左端 = center_X - L_outlet/2 = 0
+        # → hx = L_outlet/2 - plate_len_X/2
+        hx = L_outlet / 2.0 - (n_rack - 1) * rack_spacing / 2.0
+        h_origin = (hx, 0.0, 0.0)
         hx, hy, hz = h_origin
         v_origin = (hx, hy + L_h_support, hz)
         vx, vy, vz = v_origin
@@ -233,13 +245,13 @@ class 太阳能热水器(Component):
         # ==========================================
         # 9. 组合
         # ==========================================
-        # 主体用布尔并融合
+        # 主体布尔融合
         main_result = (outlet + h_support + h_support2 + v_support + v_support2
-                       + tank + plate + ring_left + ring_right)
+                       + tank + plate)
         for col in rack_list:
             main_result = main_result + col
-        # 管道用 combine() 保留独立几何 —— 布尔融合会导致管道截面特征丢失，驱动点无法寻址
-        self['热水器'] = combine(main_result, pipe_left, pipe_right)
+        # 管道和圆环不做布尔减，用 combine() 保留完整圆柱体
+        self['热水器'] = combine(main_result, pipe_left, pipe_right, ring_left, ring_right)
 
 
 if __name__ == "__main__":
