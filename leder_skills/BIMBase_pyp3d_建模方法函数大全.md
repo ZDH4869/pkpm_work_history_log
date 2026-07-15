@@ -1,3 +1,8 @@
+---
+name: bimbase-pyp3d-function-reference
+description: BIMBase pyp3d 建模方法函数大全。系统整理了所有 pyp3d 函数的标准结构、Attr 参数规范、9 种基础几何体、6 种复杂造型、变换、布置、驱动点、颜色、3 种自定义组件、建模决策树与完整示例。当 Agent 需要查阅具体 pyp3d 函数用法时加载。
+---
+
 # BIMBase pyp3d 建模方法函数大全
 
 > 本文档系统整理了 BIMBase 建模中所有 `pyp3d` 建模方法函数的使用要求、参数设定方法和代码示例。
@@ -601,10 +606,33 @@ self.setDrivenFeaturePoint(
 
 **SnapMode 枚举：**
 
-| 模式 | 说明 |
-|------|------|
-| `GeometricCenter` | 几何中心，闭合截面/对称体 |
-| `EndPoint` | 端点，开放曲线/线段末端 |
+```python
+class SnapMode(Enum):
+    Invalid              = -1          # 非法值
+    First                = 0           # 初始化
+    Nearest              = 1           # 最近点
+    MidPoint             = 1 << 2      # 中点
+    Center               = 1 << 3      # 中心点
+    EndPoint             = 1 << 4      # 端点
+    Intersection         = 1 << 6      # 交点
+    Tangency             = 1 << 7      # 相切
+    TangentPoint         = 1 << 8      # 相切点
+    Perpendicular        = 1 << 9      # 垂直
+    PerpendicularPoint   = 1 << 10     # 垂直点
+    Parallel             = 1 << 11     # 平行
+    Multi3               = 1 << 12     # （内部使用）
+    Multi1               = 1 << 14     # （内部使用）
+    Multi2               = 1 << 15     # （内部使用）
+    GeometricCenter      = 1 << 16     # 几何中心点，闭合截面/对称体
+    Quadrant             = 1 << 17     # 象限点
+    Extension            = 1 << 18     # 延伸线
+    ApparentIntersection = 1 << 19     # 外观交点
+    Insertion            = 1 << 20     # 插入点
+    Node                 = 1 << 21     # 节点
+    enGetBaseCurve       = 1 << 22     # 基准线
+```
+
+> **驱动点常用**：`SnapMode.GeometricCenter`（几何中心）、`SnapMode.EndPoint`（端点）。其余枚举值用于 BIMBase 内部捕捉系统。
 
 **示例：**
 ```python
@@ -629,16 +657,17 @@ class myPart(Component):
 
 > 来源：[drive_point_interface.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/drive_point_interface.md)
 
-### 表达式编写规则（重要）
+### 表达式编写规则（经实验验证）
 
-> BIMBase 表达式解析器不支持 `*0.5`（小数乘法）和括号 `()` 分组语法。
+> 对照实验（椭圆球.py vs 椭圆球 copy.py）确认：`*` `/` `()` `**` 均正常支持。驱动点失效的唯一根因是**表达式引用了 `obvious=False` 的隐藏 Attr 参数**。
 
-| 规则 | 错误 | 正确 |
-|------|------|------|
-| 用 `/2` 替代 `*0.5` | `[长]*0.5` | `[长]/2` |
-| 不用括号分组 | `([长]-[宽])/2` | `[长]/2-[宽]/2` |
-| 三轴含定位点 | `[长]/2` | `[定位点X]+[长]/2` |
-| Attr 建议 obvious | 引用隐藏参数 | 设为 `obvious=True` |
+| 规则 | 严重性 | 说明 |
+|------|--------|------|
+| **引用的 Attr 必须 obvious=True** | **硬性要求** | 隐藏参数导致表达式解析失败，驱动点不显示 |
+| **不需修改时加 readonly=True** | 最佳实践 | `obvious=True, readonly=True` 置灰，保证驱动点正常同时满足不可改性 |
+| **三轴必须含定位点** | 硬性要求 | 不含 `[定位点X/Y/Z]` 则无法跟随插入点偏移 |
+| `*0.5` 等乘法 | 无限制 | 已证实可用 |
+| 括号 `()` 分组 | 无限制 | 已证实可用 |
 
 ---
 

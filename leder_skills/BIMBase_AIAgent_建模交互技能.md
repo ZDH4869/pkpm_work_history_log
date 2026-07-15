@@ -39,11 +39,19 @@ description: AI Agent 与用户进行 BIMBase pyp3d 建模交互时的行为规�
 - **临时坐标系原点**：如"以 (1,2,3) 为临时坐标点"
 - **方向描述**：如"沿着 X 轴方向"
 
+**临时坐标系核心规则（必须遵守）：**
+
+> 1. 当用户说"**以某点为临时坐标系原点**"后，该段落中后续所有坐标参数和数值描述均以该临时坐标系原点为基准（即相对坐标），除非用户明确说明是原始坐标系参数。
+> 2. 临时坐标系**仅做原点平移**，X/Y/Z 轴方向及各平面（xoy、zoy、zox 等）均与原始坐标系保持平行，不涉及任何旋转。
+> 3. 若用户在新的段落中**重新声明**"以某点为临时坐标系原点"，则后续坐标切换为新的临时坐标系。
+> 4. 若用户**未提及任何临时坐标系**，默认所有坐标均为原始坐标系（全局坐标系）下的绝对坐标。
+
 **示例输入：**
 > 以 (0,0,0) 为临时坐标点，沿 X 轴方向绘制长度为 1500mm 的直线
 
 **AI Agent 需做什么：**
 - 将用户给的临时坐标系原点转为 `translate(x,y,z)` 或 `Vec3(x,y,z)`
+- 同一段落内所有坐标叠加临时原点偏移，再转为全局坐标
 - 将方向描述转为正确的向量参数（如 X轴→Vec3(1,0,0)）
 - 确保所有尺寸单位统一为 mm
 
@@ -183,6 +191,14 @@ MCP/知识库检索 → 代码生成 → 自检 → 交付
 
 ### Step 4：代码生成
 
+**生成代码前，必须先输出「建模参数确认表」供用户确认。**
+
+| 步骤 | 部件 | API | 临时坐标系原点 | 截面/轴线定义 | 拉伸方向/距离 | 全局坐标范围 |
+|------|------|-----|-------------|-------------|-------------|------------|
+| 1 | 部件名 | 函数名 | 坐标 | 形心/起点/终点 | 方向±距离 | min→max |
+
+用户确认后再生成代码。
+
 代码必须严格遵循标准结构：
 
 #### 4.0 完整的代码结构模板
@@ -205,7 +221,9 @@ class 模型名称(Component):
 
         # ========== 特征点定义（可选）==========
         # self.setDrivenFeaturePoint('名称', SnapMode.GeometricCenter, 'X表达式', 'Y表达式', 'Z表达式')
-        # 表达式规则：禁止 *0.5（用 /2）、禁止括号 ()（展开为加减）、三轴必须含 [定位点X/Y/Z]
+        # 表达式规则：引用的 Attr 必须 obvious=True；若参数不需修改加 readonly=True；三轴必须含 [定位点X/Y/Z]；数学运算无限制
+        # SnapMode 枚举：GeometricCenter(65536)几何中心/EndPoint(16)端点, MidPoint(4)中点, Center(8)中心点,
+        #   Nearest(1)最近点, Intersection(64)交点, Quadrant(131072)象限点, Node(2097152)节点, 等
 
         self.replace()
 
@@ -266,6 +284,12 @@ if __name__ == "__main__":
 - [ ] `if __name__ == "__main__":` 下 `place(实例)` 输出
 - [ ] 所有用户指定的参数面板设置（obvious/readonly/combo）均已正确配置
 - [ ] 所有用户指定的特征点均已定义
+
+**主动复盘规则（触发条件：用户对同一问题进行 ≥2 次修改时）：**
+1. 暂停修改，不继续尝试
+2. 复盘列出所有不确定的坐标起点/终点/截面原点/拉伸方向
+3. 以表格形式向用户提问确认（"我当前理解" vs "请确认是否正确"）
+4. 用户确认后再修改代码
 
 ---
 
@@ -405,6 +429,8 @@ cd "D:\BIMbase\PythonScript\python-3.7.9-embed-amd64\Scripts"
 |------|------|
 | 建模技能 SKILL.md | [D:\BIMbase\PythonScript\BFAComponentLib\SKILL.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/SKILL.md) |
 | AI Agent 建模指南 | [D:\BIMbase\PythonScript\BFAComponentLib\BIMBase_AIAgent_建模指南.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/BIMBase_AIAgent_建模指南.md) |
+| 几何建模精确交互规范 | [D:\BIMbase\PythonScript\BFAComponentLib\leder_skills\BIMBase_几何建模精确交互规范.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/leder_skills/BIMBase_几何建模精确交互规范.md) |
+| Agent几何理解与验证规则 | [D:\BIMbase\PythonScript\BFAComponentLib\leder_skills\BIMBase_Agent几何理解与验证规则.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/leder_skills/BIMBase_Agent几何理解与验证规则.md) |
 | 建模方法函数大全 | [D:\BIMbase\PythonScript\BFAComponentLib\leder_skills\BIMBase_pyp3d_建模方法函数大全.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/leder_skills/BIMBase_pyp3d_建模方法函数大全.md) |
 | MCP 技能库 | [D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/) |
 | Skill Docs | [D:\01\tyafc-master\tyafc-master\backend\agent\skill_docs\BIMBaseModel\](file:///D:/01/tyafc-master/tyafc-master/backend/agent/skill_docs/BIMBaseModel/) |

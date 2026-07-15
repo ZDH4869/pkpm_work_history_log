@@ -128,6 +128,21 @@ if __name__ == "__main__":
 - `geom.color(R, G, B, Alpha)` — RGBA 均 0~1，链式调用。
 - 布置：`RotationPlace.RotationFunction(g)`（旋转布置）、`TwoPointPlace.linearize(g, '长')`（两点线性布置，线性变量名须与 Attr 名完全一致）。
 - 驱动点：`self.setDrivenFeaturePoint(name, SnapMode.GeometricCenter|EndPoint, 'X表达式','Y表达式','Z表达式')`，在 `replace()` 之前定义。
+- **驱动点表达式规则**（经实验验证）：引用的 Attr **必须** `obvious=True`（隐藏参数导致解析失败，是驱动点失效的根因）；若该参数用户不应修改，加 `readonly=True` 置灰；三轴都必须含 `[定位点X/Y/Z]`；数学运算（`*` `/` `()` `**`）无限制。
+- **SnapMode 吸附模式**：驱动点常用 `GeometricCenter`（几何中心）和 `EndPoint`（端点）。完整枚举见下方：
+
+```python
+class SnapMode(Enum):
+    Invalid=-1, First=0, Nearest=1,
+    MidPoint=1<<2, Center=1<<3, EndPoint=1<<4,
+    Intersection=1<<6, Tangency=1<<7, TangentPoint=1<<8,
+    Perpendicular=1<<9, PerpendicularPoint=1<<10, Parallel=1<<11,
+    Multi3=1<<12, Multi1=1<<14, Multi2=1<<15,
+    GeometricCenter=1<<16,   # 几何中心点
+    Quadrant=1<<17, Extension=1<<18,
+    ApparentIntersection=1<<19, Insertion=1<<20,
+    Node=1<<21, enGetBaseCurve=1<<22
+```
 
 ### 变换示例
 ```python

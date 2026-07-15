@@ -205,6 +205,9 @@ class 模型名称(Component):
 
         # ========== 特征点定义（可选）==========
         # self.setDrivenFeaturePoint('名称', SnapMode.GeometricCenter, 'X表达式', 'Y表达式', 'Z表达式')
+        # 表达式规则：引用的 Attr 必须 obvious=True；若参数不需修改加 readonly=True；三轴必须含 [定位点X/Y/Z]；数学运算无限制
+        # SnapMode 枚举：GeometricCenter(65536)几何中心/EndPoint(16)端点, MidPoint(4)中点, Center(8)中心点,
+        #   Nearest(1)最近点, Intersection(64)交点, Quadrant(131072)象限点, Node(2097152)节点, 等
 
         self.replace()
 

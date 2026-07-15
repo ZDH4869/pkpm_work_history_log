@@ -16,7 +16,7 @@ class 基础热水器(Component):
         self['排架管直径'] = Attr(50.0, obvious=True)
         self['排架管间距'] = Attr(185.5, obvious=True)       # 随B长度变化可调
         self['排架管总数'] = Attr(10.0, obvious=True)        # X 向正负对称排列总数
-        self['支撑柱直径'] = Attr(20.0, obvious=True)
+        self['支撑柱直径'] = Attr(60.0, obvious=True)
 
         # ========== 显示参数（用户只可查看）==========
         self['排架斜长'] = Attr(1214.0, readonly=True, show=True)

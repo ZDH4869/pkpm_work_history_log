@@ -8,7 +8,7 @@ class 太阳能集热器(Component):
         Component.__init__(self)
         # ========== 可调参数 ==========
         self['设备名称'] = Attr('太阳能集热器', obvious=True)
-        self['底边长度'] = Attr(1000.0, obvious=True)
+        self['支撑宽度'] = Attr(1000.0, obvious=True)
         self['支撑板倾角'] = Attr(45.0, obvious=True)
         self['集水管长度'] = Attr(1500.0, obvious=True)
         self['集水管直径'] = Attr(150.0, obvious=True)
@@ -26,17 +26,17 @@ class 太阳能集热器(Component):
         self.setDrivenFeaturePoint('下集水管右圆心', SnapMode.GeometricCenter,
             '[定位点X]+[集水管长度]', '[定位点Y]', '[定位点Z]+[集水管直径]/2')
         self.setDrivenFeaturePoint('上集水管左圆心', SnapMode.GeometricCenter,
-            '[定位点X]', '[定位点Y]+[底边长度]',
-            '[定位点Z]+[集水管直径]/2+[底边长度]*tan([支撑板倾角]*3.14159265/180.0)')
+            '[定位点X]', '[定位点Y]+[支撑宽度]',
+            '[定位点Z]+[集水管直径]/2+[支撑宽度]*tan([支撑板倾角]*3.14159265/180.0)')
         self.setDrivenFeaturePoint('上集水管右圆心', SnapMode.GeometricCenter,
-            '[定位点X]+[集水管长度]', '[定位点Y]+[底边长度]',
-            '[定位点Z]+[集水管直径]/2+[底边长度]*tan([支撑板倾角]*3.14159265/180.0)')
+            '[定位点X]+[集水管长度]', '[定位点Y]+[支撑宽度]',
+            '[定位点Z]+[集水管直径]/2+[支撑宽度]*tan([支撑板倾角]*3.14159265/180.0)')
 
         self.replace()
 
     @export
     def replace(self):
-        base = self['底边长度']
+        base = self['支撑宽度']
         angle_deg = self['支撑板倾角']
         cyl_len = self['集水管长度']
         D_main = self['集水管直径']

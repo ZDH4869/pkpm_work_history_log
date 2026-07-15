@@ -224,8 +224,16 @@ if __name__ == "__main__":
 |--------|------|------|
 | `matrix_interface` | `translate(x,y,z)` / `trans(...)` / `rotate(axis, rad)` / `rotx/roty/rotz(rad)` / `scale(...)` | 变换用 `*` 作用于几何体，**从右到左**执行；角度为**弧度制**；右手坐标系 |
 | `PlaceInterface` | `RotationPlace.RotationFunction(g)` / `TwoPointPlace.linearize(g, '长')` | 旋转布置、两点线性布置；线性变量名须与 Attr 名完全一致 |
-| `DrivePointInterface` | `self.setDrivenFeaturePoint(name, SnapMode.X, 'X表达式', 'Y表达式', 'Z表达式')` | 驱动点/特征点，支持吸附对齐（`GeometricCenter`/`EndPoint`）；在 `replace()` 前定义。**表达式规则**：禁止 `*0.5`（用 `/2`）、禁止括号 `()`（展开为加减）、三轴必须含 `[定位点X/Y/Z]` |
+| `DrivePointInterface` | `self.setDrivenFeaturePoint(name, SnapMode.X, 'X表达式', 'Y表达式', 'Z表达式')` | 驱动点/特征点，支持吸附对齐（`GeometricCenter`/`EndPoint`）；在 `replace()` 前定义。**表达式规则**：引用的 Attr 必须 `obvious=True`（隐藏参数导致解析失败）；若不需用户修改则加 `readonly=True` 置灰；三轴必须含 `[定位点X/Y/Z]`；`*` `/` `()` `**` 等数学运算无限制。**SnapMode 枚举**：`Invalid=-1, First=0, Nearest=1, MidPoint=4, Center=8, EndPoint=16, Intersection=64, Tangency=128, TangentPoint=256, Perpendicular=512, PerpendicularPoint=1024, Parallel=2048, Multi3=4096, Multi1=16384, Multi2=32768, GeometricCenter=65536, Quadrant=131072, Extension=262144, ApparentIntersection=524288, Insertion=1048576, Node=2097152, enGetBaseCurve=4194304`。驱动点常用 `GeometricCenter`（几何中心，值65536）和 `EndPoint`（端点，值16）。 |
 | `Color` | `geom.color(R, G, B, Alpha)` | RGBA 0~1；链式调用；布尔后需重设 |
+
+#### 5.3.1 临时坐标系规则
+
+> 1. 当用户说"**以某点为临时坐标系原点**"后，该段落中后续所有坐标参数和数值描述均以该临时坐标系原点为基准（即相对坐标），除非用户明确说明是原始坐标系参数。
+> 2. 临时坐标系**仅做原点平移**，X/Y/Z 轴方向及各平面（xoy、zoy、zox 等）均与原始坐标系保持平行，不涉及任何旋转。
+> 3. 若用户在新的段落中**重新声明**"以某点为临时坐标系原点"，则后续坐标切换为新的临时坐标系。
+> 4. 若用户**未提及任何临时坐标系**，默认所有坐标均为原始坐标系（全局坐标系）下的绝对坐标。
+> 5. 代码实现时，先计算临时坐标系原点在全局坐标中的位置，再将段落内所有相对坐标叠加该原点偏移得到全局坐标。
 
 ### 5.4 变换示例
 
@@ -285,10 +293,24 @@ AI 生成的脚本由 BIMBase **内嵌 Python** 执行（`frontend/workers/scrip
 1. **接 MCP**：将 BIMBase MCP Server 挂到 `http://<host>:8888`，Agent 具备 5 个检索工具 + 1 个建模 Prompt。
 2. **建模第一步**：`get_summary_document()` → `get_skill_manifest()`。
 3. **取文档**：`get_skill_bundle([需要的symbol])`，自动附带 `basic_writing_style` 编码规范。
-4. **写代码**：严格遵循「一个 Component 类 + Attr 参数 + @export replace() + place()」结构，单位 mm，弧度制，Vec2/Vec3 不混用。
-5. **复杂几何**：椭球/圆环等优先复用 `04_custom_components/` 模板。
-6. **执行**：脚本交由 BIMBase 内嵌 Python 3.7.9 运行，`place()` 输出到视图。
-7. **不猜函数名**：任何 `pyp3d` API 使用前必须先从 MCP/知识库读到对应文档。
+4. **生成确认表**：写代码前，先输出「建模参数确认表」（步骤、部件、API、临时坐标系原点、截面定义、拉伸方向、全局坐标范围），用户确认后再生成代码。
+5. **写代码**：严格遵循「一个 Component 类 + Attr 参数 + @export replace() + place()」结构，单位 mm，弧度制，Vec2/Vec3 不混用。
+6. **复杂几何**：椭球/圆环等优先复用 `04_custom_components/` 模板。
+7. **执行**：脚本交由 BIMBase 内嵌 Python 3.7.9 运行，`place()` 输出到视图。
+8. **不猜函数名**：任何 `pyp3d` API 使用前必须先从 MCP/知识库读到对应文档。
+9. **主动复盘**：用户对同一问题 ≥2 次修改时，暂停并列出不确定的坐标/起点/终点，以表格向用户确认后再修改。
+
+---
+
+## 十、关联技能与知识库文档
+
+| 文档 | 路径 | 用途 |
+|------|------|------|
+| pyp3d 建模技能 | [SKILL.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/SKILL.md) | API 签名、标准结构、变换规则 |
+| 建模交互技能 | [leder_skills/BIMBase_AIAgent_建模交互技能.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/leder_skills/BIMBase_AIAgent_建模交互技能.md) | 交互流程、信息收集、参数面板 |
+| 几何建模精确交互规范 | [leder_skills/BIMBase_几何建模精确交互规范.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/leder_skills/BIMBase_几何建模精确交互规范.md) | 用户提示词编写规范、三段式流程 |
+| Agent几何理解与验证规则 | [leder_skills/BIMBase_Agent几何理解与验证规则.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/leder_skills/BIMBase_Agent几何理解与验证规则.md) | Agent 推理规则、建模参数确认表 |
+| 建模方法函数大全 | [leder_skills/BIMBase_pyp3d_建模方法函数大全.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/leder_skills/BIMBase_pyp3d_建模方法函数大全.md) | 所有 pyp3d 函数详细用法 |
 
 ---
 
