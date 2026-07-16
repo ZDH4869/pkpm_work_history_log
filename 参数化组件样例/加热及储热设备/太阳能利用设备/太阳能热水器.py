@@ -1,7 +1,7 @@
 from pyp3d import *
 
 # 太阳能热水器 - 截面重建
-# 插入点 = point1 = 出水管左端面圆心 = ([定位点X], [定位点Y], [定位点Z])
+# 插入点 = point1 = 集水管左端面圆心 = ([定位点X], [定位点Y], [定位点Z])
 # [定位点X/Y/Z] 是 BIMBase 隐式内置变量，不可定义为 Attr
 
 class 太阳能热水器(Component):
@@ -9,81 +9,89 @@ class 太阳能热水器(Component):
         Component.__init__(self)
         # ========== 显示和可调参数（按顺序）==========
         self['设备名称'] = Attr('太阳能热水器', obvious=True)
-        # 保温桶中心高度 = 竖向柱高度(1000) + 水箱半径(500/2=250)
-        self['保温桶中心高度'] = Attr(1250.0, obvious=True)
-        self['保温桶长度'] = Attr(1500.0, obvious=True)          # 原「水箱长度」，新默认1500
-        self['保温桶半径'] = Attr(500.0, obvious=True)           # 原「水箱直径」，新默认500
-        # 支撑宽度 = R_v_support + R_outlet + 水平柱长度（用户修改支撑宽度即改变水平柱长度）
+        # 保温桶中心高度：竖向柱Z起点到保温桶中心Z的距离，修改此值 → 竖向柱高度联动
+        self['保温桶中心高度'] = Attr(1100.0, obvious=True)
+        self['保温桶长度'] = Attr(1500.0, obvious=True)
+        self['保温桶半径'] = Attr(250.0, obvious=True)           # 实际控制保温桶半径
+        # 支撑宽度 = 水平柱长度 + 竖向柱半径 + 集水管半径（用户修改此值 → 水平柱长度联动）
         self['支撑宽度'] = Attr(762.5, obvious=True)
-        self['出水管半径'] = Attr(50.0, obvious=True)            # 原「出水管直径/2」，新默认50
-        self['出水管长度'] = Attr(1500.0, obvious=True)          # 新默认1500
-        self['集热管间距'] = Attr(125.0, obvious=True)           # 原「排架管间距」，新默认125
-        self['集热管数量'] = Attr(9.0, obvious=True)             # 原「排架管数量」，新默认9
+        self['集水管半径'] = Attr(50.0, obvious=True)
+        self['集水管长度'] = Attr(1500.0, obvious=True)
+        self['集热管间距'] = Attr(125.0, obvious=True)
+        self['集热管数量'] = Attr(9.0, obvious=True)
         self['左侧水管半径'] = Attr(25.0, obvious=True)
         self['右侧水管半径'] = Attr(25.0, obvious=True)
+        self['支撑柱直径'] = Attr(25.0, obvious=True)            # 统一控制水平柱和竖向柱直径
 
         # ========== 隐藏参数（仅内部计算用）==========
         self['水平柱直径'] = Attr(25.0)
-        self['水平柱长度'] = Attr(1000.0)
-        self['竖向柱直径'] = Attr(25.0, obvious=True, readonly=True)
-        self['竖向柱Z起点'] = Attr(-50.0)
-        self['竖向柱Z终点'] = Attr(950.0)
+        self['水平柱长度'] = Attr(700.0)
+        self['竖向柱直径'] = Attr(25.0)
+        self['竖向柱Z起点'] = Attr(-50.0)                     # = -集水管半径，在replace()中联动计算
+        self['竖向柱Z终点'] = Attr(1050.0)
         self['排架管直径'] = Attr(50.0)
         self['太阳能板厚'] = Attr(10.0)
-        self['圆环路径直径'] = Attr(400.0)                       # 新默认400
-        self['圆环截面直径'] = Attr(40.0)                        # 新默认40
+        self['圆环路径直径'] = Attr(400.0)
+        self['圆环截面直径'] = Attr(40.0)
 
         # ========== 输出槽位 ==========
         self['热水器'] = Attr(None, show=True)
 
         # ========== 特征驱动点 ==========
-        # 规则：1) 三轴都必须含 [定位点X/Y/Z]  2) 用 /2 替代 *0.5  3) 避免引用负值参数
-        # point1 = 出水管左端面圆心 = 插入点
+        # 规则：1) 三轴都必须含 [定位点X/Y/Z]  2) 用 /2 替代 *0.5  3) 引用参数必须 obvious=True
+        # point1 = 集水管左端面圆心 = 插入点
         self.setDrivenFeaturePoint('point1', SnapMode.EndPoint,
             '[定位点X]', '[定位点Y]', '[定位点Z]')
-        # 保温桶左端面圆心  实际=(0, 700, 950)
+        # 保温桶左端面圆心  实际=(0, 700, 1050)  Z=保温桶中心高度-集水管半径
         self.setDrivenFeaturePoint('保温桶左端面圆心', SnapMode.EndPoint,
-            '[定位点X]+[出水管长度]/2-[保温桶长度]/2',
-            '[定位点Y]+[支撑宽度]-[竖向柱直径]/2-[出水管半径]',
-            '[定位点Z]+[保温桶中心高度]-[保温桶半径]/2-50')
-        # 保温桶右端面圆心  实际=(1500, 700, 950)
+            '[定位点X]+[集水管长度]/2-[保温桶长度]/2',
+            '[定位点Y]+[支撑宽度]-[支撑柱直径]/2-[集水管半径]',
+            '[定位点Z]+[保温桶中心高度]-[集水管半径]')
+        # 保温桶右端面圆心  实际=(1500, 700, 1050)
         self.setDrivenFeaturePoint('保温桶右端面圆心', SnapMode.EndPoint,
-            '[定位点X]+[出水管长度]/2+[保温桶长度]/2',
-            '[定位点Y]+[支撑宽度]-[竖向柱直径]/2-[出水管半径]',
-            '[定位点Z]+[保温桶中心高度]-[保温桶半径]/2-50')
-        # 左侧水管底部截面圆心  实际=(150, 700, 650)
+            '[定位点X]+[集水管长度]/2+[保温桶长度]/2',
+            '[定位点Y]+[支撑宽度]-[支撑柱直径]/2-[集水管半径]',
+            '[定位点Z]+[保温桶中心高度]-[集水管半径]')
+        # 左侧水管底部截面圆心  实际=(150, 700, 750)  Z=保温桶中心高度-集水管半径-保温桶半径-50
         self.setDrivenFeaturePoint('左侧水管底圆心', SnapMode.EndPoint,
-            '[定位点X]+[出水管长度]/2-[支撑宽度]+[竖向柱直径]/2+[出水管半径]+100',
-            '[定位点Y]+[支撑宽度]-[竖向柱直径]/2-[出水管半径]',
-            '[定位点Z]+[保温桶中心高度]-[保温桶半径]-100')
-        # 右侧水管底部截面圆心  实际=(1350, 700, 650)
+            '[定位点X]+[集水管长度]/2-[支撑宽度]+[支撑柱直径]/2+[集水管半径]+100',
+            '[定位点Y]+[支撑宽度]-[支撑柱直径]/2-[集水管半径]',
+            '[定位点Z]+[保温桶中心高度]-[集水管半径]-[保温桶半径]-50')
+        # 右侧水管底部截面圆心  实际=(1350, 700, 750)
         self.setDrivenFeaturePoint('右侧水管底圆心', SnapMode.EndPoint,
-            '[定位点X]+[出水管长度]/2+[支撑宽度]-[竖向柱直径]/2-[出水管半径]-100',
-            '[定位点Y]+[支撑宽度]-[竖向柱直径]/2-[出水管半径]',
-            '[定位点Z]+[保温桶中心高度]-[保温桶半径]-100')
+            '[定位点X]+[集水管长度]/2+[支撑宽度]-[支撑柱直径]/2-[集水管半径]-100',
+            '[定位点Y]+[支撑宽度]-[支撑柱直径]/2-[集水管半径]',
+            '[定位点Z]+[保温桶中心高度]-[集水管半径]-[保温桶半径]-50')
 
         self.replace()
 
     @export
     def replace(self):
         # —— 提取参数 ——
-        R_outlet = self['出水管半径']
-        L_outlet = self['出水管长度']
+        R_outlet = self['集水管半径']
+        L_outlet = self['集水管长度']
+
+        D_support = self['支撑柱直径']
+        self['水平柱直径'] = D_support
+        self['竖向柱直径'] = D_support
 
         R_h_support = self['水平柱直径'] / 2.0
 
         R_v_support = self['竖向柱直径'] / 2.0
-        v_start_Z = self['竖向柱Z起点']
+        # 竖向柱Z起点 = 负的集水管半径
+        v_start_Z = -R_outlet
+        self['竖向柱Z起点'] = v_start_Z
 
-        # 水平柱长度 = 支撑宽度 - R_v_support - R_outlet（用户通过支撑宽度修改）
         L_h_support = self['支撑宽度'] - R_v_support - R_outlet
+        self['水平柱长度'] = L_h_support
 
         L_tank = self['保温桶长度']
-        R_tank = self['保温桶半径'] / 2.0
+        R_tank = self['保温桶半径']
 
-        # 保温桶中心高度 = R_tank + 竖向支撑柱长度 → v_end_Z 由此推导
-        # 竖向支撑柱长度 = v_end_Z - v_start_Z = 保温桶中心高度 - R_tank
-        v_end_Z = v_start_Z + (self['保温桶中心高度'] - R_tank)
+        # 保温桶中心高度 = 竖向柱Z起点到保温桶中心Z的距离
+        # 保温桶中心Z = 保温桶中心高度 - |v_start_Z| = 保温桶中心高度 - 集水管半径
+        v_end_Z = self['保温桶中心高度'] - R_outlet
+        self['竖向柱Z终点'] = v_end_Z
 
         R_rack = self['排架管直径'] / 2.0
         rack_spacing = self['集热管间距']
@@ -99,7 +107,7 @@ class 太阳能热水器(Component):
         R_pipe_right = self['右侧水管半径']
 
         # —— 派生量 ——
-        # hx 使出水管左端面圆心落在 X=0（插入点位置）
+        # hx 使集水管左端面圆心落在 X=0（插入点位置）
         # center_X = hx + plate_len_X/2, outlet 左端 = center_X - L_outlet/2 = 0
         # → hx = L_outlet/2 - plate_len_X/2
         hx = L_outlet / 2.0 - (n_rack - 1) * rack_spacing / 2.0
@@ -135,7 +143,7 @@ class 太阳能热水器(Component):
         pipe_Z_top = pipe_Z_center + 50.0
 
         # ==========================================
-        # 1. 底部出水管（center_X 对称）
+        # 1. 底部集水管（center_X 对称）
         # ==========================================
         outlet_half = L_outlet / 2.0
         outlet = Cone(
@@ -195,7 +203,7 @@ class 太阳能热水器(Component):
             x_pos = center_X - upper_half_span + i * (2.0 * upper_half_span) / (n_rack - 1)
             col = Cone(Vec3(x_pos, hy, hz), Vec3(x_pos, ty, tz), R_rack, R_rack)
             col = col - tank     # 删除与水箱相交部分
-            col = col - outlet   # 删除与出水管相交部分
+            col = col - outlet   # 删除与集水管相交部分
             rack_list.append(col)
 
         # ==========================================
@@ -215,7 +223,7 @@ class 太阳能热水器(Component):
             -(rack_length / 2.0) * sin(rack_angle)
         ) * plate
         plate = plate - tank    # 删除与水箱相交部分
-        plate = plate - outlet  # 删除与出水管相交部分
+        plate = plate - outlet  # 删除与集水管相交部分
 
         # ==========================================
         # 7. 圆环（YOZ面，水箱两端各一个）

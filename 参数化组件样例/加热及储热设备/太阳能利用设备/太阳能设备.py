@@ -1,6 +1,6 @@
 from pyp3d import *
 
-# 基础热水器：竖直圆柱A + 横向圆柱B + 排架圆柱C + 平行复制圆柱D + 竖向圆柱E
+# 基础热水器：竖直圆柱A + 横向圆柱B + 集热管圆柱C + 平行复制圆柱D + 竖向圆柱E
 # 插入点：水箱 底面圆心 (0, 0, 0)
 
 class 基础热水器(Component):
@@ -12,15 +12,15 @@ class 基础热水器(Component):
         self['水箱高度'] = Attr(1200.0, obvious=True)
         self['集水管直径'] = Attr(100.0, obvious=True)      # B 和 D 共用直径
         self['集水管长度'] = Attr(2000.0, obvious=True)     # X 向总长度
-        self['排架倾角'] = Attr(45.0, obvious=True)           # 度，Y 轴向 Z 轴偏转
-        self['排架管直径'] = Attr(50.0, obvious=True)
-        self['排架管间距'] = Attr(185.5, obvious=True)       # 随B长度变化可调
-        self['排架管总数'] = Attr(10.0, obvious=True)        # X 向正负对称排列总数
+        self['集热管倾角'] = Attr(45.0, obvious=True)           # 度，Y 轴向 Z 轴偏转
+        self['集热管直径'] = Attr(50.0, obvious=True)
+        self['集热管间距'] = Attr(185.5, obvious=True)       # 随B长度变化可调
+        self['集热管总数'] = Attr(10.0, obvious=True)        # X 向正负对称排列总数
         self['支撑柱直径'] = Attr(60.0, obvious=True)
 
         # ========== 显示参数（用户只可查看）==========
-        self['排架斜长'] = Attr(1214.0, readonly=True, show=True)
-        self['支撑柱高度'] = Attr(1000.0, readonly=True, show=True)
+        self['集热管斜长'] = Attr(1214.0, readonly=True)
+        self['集热器高度'] = Attr(950.0, obvious=True, readonly=True, show=True)
 
         # ========== 输出槽位 ==========
         self['基础热水器'] = Attr(None, show=True)
@@ -47,26 +47,26 @@ class 基础热水器(Component):
         L_BD_total = self['集水管长度']     # 总长度
         L_BD = L_BD_total / 2.0            # 半长（X 向单侧拉伸距离）
 
-        angle_deg = self['排架倾角']
+        angle_deg = self['集热管倾角']
         angle = angle_deg * pi / 180.0
 
-        D_C = self['排架管直径']
+        D_C = self['集热管直径']
         R_C = D_C / 2.0
 
-        array_spacing = self['排架管间距']
-        n_total = int(self['排架管总数'])      # X 向正负对称排列总数（偶数居中）
+        array_spacing = self['集热管间距']
+        n_total = int(self['集热管总数'])      # X 向正负对称排列总数（偶数居中）
 
         D_E = self['支撑柱直径']
         R_E = D_E / 2.0
 
         # ========== 派生尺寸 ==========
-        L_a = D_A / cos(angle) - 2 * D_BD       # 排架斜长 = A直径/cos(倾角) - B直径 - D直径
+        L_a = D_A / cos(angle) - 2 * D_BD       # 集热管斜长 = A直径/cos(倾角) - B直径 - D直径
         H_E = D_A * tan(angle)                 # 圆柱E高度 = A直径 * tan(倾角)
 
-        self['排架斜长'] = L_a
-        self['支撑柱高度'] = H_E
+        self['集热管斜长'] = L_a
+        self['集热器高度'] = H_E - R_BD
 
-        # 排架方向单位向量（YZ 平面，Y 偏 Z）
+        # 集热管方向单位向量（YZ 平面，Y 偏 Z）
         tilt_dir_Y = cos(angle)
         tilt_dir_Z = sin(angle)
 
@@ -83,7 +83,7 @@ class 基础热水器(Component):
             R_BD, R_BD
         )
 
-        # ========== 3. 排架管排架（沿排架方向，X 向阵列）==========
+        # ========== 3. 集热管集热管（沿集热管方向，X 向阵列）==========
         cyl_D_center_Y = cyl_B_center_Y + L_a * tilt_dir_Y
         cyl_D_center_Z = cyl_B_center_Z + L_a * tilt_dir_Z
 
@@ -95,14 +95,14 @@ class 基础热水器(Component):
             cyl_C = Cone(cyl_C_start, cyl_C_end, R_C, R_C)
             cyl_C_list.append(cyl_C)
 
-        # ========== 4. 圆柱体D（B 平行复制到排架终点）==========
+        # ========== 4. 圆柱体D（B 平行复制到集热管终点）==========
         cyl_D = Cone(
             Vec3(-L_BD, cyl_D_center_Y, cyl_D_center_Z),
             Vec3( L_BD, cyl_D_center_Y, cyl_D_center_Z),
             R_BD, R_BD
         )
 
-        # ========== 5. 支撑柱（排架终点向下到圆柱A上表面）==========
+        # ========== 5. 支撑柱（集热管终点向下到圆柱A上表面）==========
         # 在 XOY 面画圆，沿 Z 负向拉伸至圆柱 A 顶面 Z = H_A
         cyl_E = Cone(
             Vec3(0, cyl_D_center_Y, cyl_D_center_Z),
