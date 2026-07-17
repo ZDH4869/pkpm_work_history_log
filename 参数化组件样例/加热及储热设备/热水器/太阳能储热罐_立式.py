@@ -20,22 +20,22 @@ class 太阳能储热罐_立式(Component):
         self.setDrivenFeaturePoint('储热罐底部圆心', SnapMode.GeometricCenter,
             '[定位点X]', '[定位点Y]', '[定位点Z]')
         # 底部水管拉伸终点
-        self.setDrivenFeaturePoint('底部水管终点', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('底部水管终点', SnapMode.GeometricCenter,
             '[定位点X]', '[定位点Y] - [储热罐半径] - [外扩厚度]', '[定位点Z] + 105 + [中部水管半径]')
         # 中部水管拉伸终点
-        self.setDrivenFeaturePoint('中部水管终点', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('中部水管终点', SnapMode.GeometricCenter,
             '[定位点X]', '[定位点Y] - [储热罐半径] - [外扩厚度]', '[定位点Z] + 675 + [中部水管半径]')
         # 镜像底部水管拉伸终点
-        self.setDrivenFeaturePoint('上侧底部水管终点', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('上侧底部水管终点', SnapMode.GeometricCenter,
             '[定位点X]', '[定位点Y] - [储热罐半径] - [外扩厚度]', '[定位点Z] + [储热罐高度] - 105 - [中部水管半径]')
         # 镜像中部水管拉伸终点
-        self.setDrivenFeaturePoint('上侧中部水管终点', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('上侧中部水管终点', SnapMode.GeometricCenter,
             '[定位点X]', '[定位点Y] - [储热罐半径] - [外扩厚度]', '[定位点Z] + [储热罐高度] - 675 - [中部水管半径]')
         # 左侧入水管顶部截面圆心（拉伸终点）
-        self.setDrivenFeaturePoint('左侧入水管顶部圆心', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('左侧入水管顶部圆心', SnapMode.GeometricCenter,
             '[定位点X] - 90 - [顶部水管半径]', '[定位点Y]', '[定位点Z] + [储热罐高度] + 25')
         # 右侧入水管顶部截面圆心（拉伸终点）
-        self.setDrivenFeaturePoint('右侧入水管顶部圆心', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('右侧入水管顶部圆心', SnapMode.GeometricCenter,
             '[定位点X] + 90 + [顶部水管半径]', '[定位点Y]', '[定位点Z] + [储热罐高度] + 25')
 
         self.replace()

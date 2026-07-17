@@ -27,10 +27,10 @@ class 基础热水器(Component):
 
         # ========== 特征驱动点 ==========
         # point1 = 水箱底面圆心 = 插入点
-        self.setDrivenFeaturePoint('point1', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('point1', SnapMode.GeometricCenter,
             '[定位点X]', '[定位点Y]', '[定位点Z]')
         # point2 = 水箱顶面圆心
-        self.setDrivenFeaturePoint('point2', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('point2', SnapMode.GeometricCenter,
             '[定位点X]', '[定位点Y]', '[定位点Z]+[水箱高度]')
 
         self.replace()

@@ -44,6 +44,22 @@ description: 面向用户的 BIMBase pyp3d 建模精确交互规范。指导用�
 - 设置 obvious/readonly/combo/show 属性
 - 定义驱动点表达式（注意：引用参数必须 obvious=True）
 
+**特征点 SnapMode 选择规则（核心规则）：**
+- 截面圆心、拉伸体轴线终点/中点、几何体表面形心、几何体体心 → 一律使用 `SnapMode.GeometricCenter`
+- 几何体角点/顶点 → 使用 `SnapMode.EndPoint`
+- **绝大多数情况默认使用 `SnapMode.GeometricCenter`**
+
+**特征点确认流程（代码生成前强制执行）：**
+Agent 必须在生成代码前，以表格形式与用户确认每个特征点的位置和 SnapMode 类型：
+
+| 特征点名称 | 位置描述 | 建议 SnapMode | 是否正确？ |
+|-----------|---------|--------------|-----------|
+| 储热罐顶部圆心 | 储热罐顶面截面圆心 | `GeometricCenter` | ？ |
+| 底部水管终点 | 底部水管远端截面圆心 | `GeometricCenter` | ？ |
+| 左侧入水管顶部圆心 | 左侧入水管上端截面圆心 | `GeometricCenter` | ？ |
+
+用户确认后方可编写代码。若用户未明确指定 SnapMode，Agent 默认使用 `GeometricCenter` 并在确认表中标注。
+
 ### 第三阶段：精细化微调（目标：1次对话）
 
 **用户可调整：**

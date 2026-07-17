@@ -54,21 +54,21 @@ class pythonModel(Component):
         self['烟道式燃气快速热水器'] = Attr(None, show=True)
 
         # ========== 驱动点设置 ==========
-        self.setDrivenFeaturePoint('入水管顶部', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('入水管顶部', SnapMode.GeometricCenter,
             '[定位点X]', '[定位点Y]', '[定位点Z]+[水箱高度]+[入水管高度]')
-        self.setDrivenFeaturePoint('中心出水管底部', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('中心出水管底部', SnapMode.GeometricCenter,
             '[定位点X]+[中心出水管群X偏移]',
             '[定位点Y]+[中心出水管群Y偏移]',
             '[定位点Z]-[中心出水管高度]')
-        self.setDrivenFeaturePoint('左侧出水管底部', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('左侧出水管底部', SnapMode.GeometricCenter,
             '[定位点X]+[中心出水管群X偏移]-[左侧出水管群间距]',
             '[定位点Y]+[中心出水管群Y偏移]',
             '[定位点Z]-[中心出水管高度]')
-        self.setDrivenFeaturePoint('右侧出水管底部', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('右侧出水管底部', SnapMode.GeometricCenter,
             '[定位点X]+[中心出水管群X偏移]+[右侧出水管群间距]',
             '[定位点Y]+[中心出水管群Y偏移]',
             '[定位点Z]-[中心出水管高度]')
-        self.setDrivenFeaturePoint('配电口', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('配电口', SnapMode.GeometricCenter,
             '[定位点X]+[中心出水管群X偏移]-[左侧出水管群间距]-[中心出水管半径]-[水箱长度]/10',
             '[定位点Y]+[中心出水管群Y偏移]',
             '[定位点Z]')

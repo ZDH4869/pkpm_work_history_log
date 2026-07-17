@@ -190,6 +190,66 @@ vertices = [Vec2(-half, -half), Vec2(half, -half), Vec2(half, half), Vec2(-half,
 
 ## 六、特征点规则
 
+### 6.1 SnapMode 完整枚举
+
+```python
+class SnapMode(Enum):
+    Invalid              = -1           # 非法值
+    First                = 0            # 初始化
+    Nearest              = 1            # 最近点
+    MidPoint             = 1 << 2       # 中点
+    Center               = 1 << 3       # 中心点
+    EndPoint             = 1 << 4       # 端点
+    Intersection         = 1 << 6       # 交点
+    Tangency             = 1 << 7       # 相切
+    TangentPoint         = 1 << 8       # 相切点
+    Perpendicular        = 1 << 9       # 垂直
+    PerpendicularPoint   = 1 << 10      # 垂直点
+    Parallel             = 1 << 11      # 平行
+    Multi3               = 1 << 12
+    Multi1               = 1 << 14
+    Multi2               = 1 << 15
+    GeometricCenter      = 1 << 16      # 几何中心点
+    Quadrant             = 1 << 17      # 象限点
+    Extension            = 1 << 18      # 延伸线
+    ApparentIntersection = 1 << 19      # 外观交点
+    Insertion            = 1 << 20      # 插入点
+    Node                 = 1 << 21      # 节点
+    enGetBaseCurve       = 1 << 22      # 基准线
+```
+
+### 6.2 SnapMode 选择规则（核心规则）
+
+| 特征点位置 | 应使用的 SnapMode | 说明 |
+|-----------|-------------------|------|
+| 截面圆心 | `GeometricCenter` | Cone 的 centerA/centerB 截面圆心 |
+| 拉伸体轴线终点 | `GeometricCenter` | 圆柱/圆台/棱柱的轴线两端截面形心 |
+| 拉伸体轴线中点 | `GeometricCenter` | 圆柱/圆台/棱柱的轴线中点 |
+| 几何体表面形心 | `GeometricCenter` | Box 的 baseOrigin/topOrigin、Cube 面心 |
+| 几何体体心 | `GeometricCenter` | Cube/Sphere 的几何中心 |
+| 长方体/棱柱顶点 | `EndPoint` | 几何体的明确角点 |
+| 线段端点 | `EndPoint` | Line 的起点/终点 |
+
+> **核心原则：绝大多数情况默认使用 `SnapMode.GeometricCenter`。** 只有当特征点明确是几何体的角点/顶点等非中心位置时，才使用 `SnapMode.EndPoint`。
+
+### 6.3 特征点确认流程（代码生成前强制执行）
+
+**在编写或修改 Python 代码之前，Agent 必须与用户确认每个特征点的位置和 SnapMode 类型：**
+
+1. 列出所有计划定义的特征点，以表格形式呈现：
+
+| 特征点名称 | 位置描述 | 建议 SnapMode | 是否正确？ |
+|-----------|---------|--------------|-----------|
+| 入水管顶部 | 入水管上端截面圆心 | `GeometricCenter` | ？ |
+| 中心出水管底部 | 中心出水管下端截面圆心 | `GeometricCenter` | ？ |
+| 配电口 | 水箱表面某点 | `GeometricCenter` | ？ |
+
+2. 用户确认后方可编写代码。
+
+3. 若用户未明确指定 SnapMode，Agent 默认使用 `GeometricCenter` 并在确认表中标注。
+
+### 6.4 驱动点表达式规则
+
 | 规则 | 说明 |
 |------|------|
 | 参数可见性 | 驱动点引用的 Attr 必须 `obvious=True`（隐藏参数导致解析失败） |

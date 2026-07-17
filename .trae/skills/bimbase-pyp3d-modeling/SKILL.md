@@ -129,19 +129,33 @@ if __name__ == "__main__":
 - 布置：`RotationPlace.RotationFunction(g)`（旋转布置）、`TwoPointPlace.linearize(g, '长')`（两点线性布置，线性变量名须与 Attr 名完全一致）。
 - 驱动点：`self.setDrivenFeaturePoint(name, SnapMode.GeometricCenter|EndPoint, 'X表达式','Y表达式','Z表达式')`，在 `replace()` 之前定义。
 - **驱动点表达式规则**（经实验验证）：引用的 Attr **必须** `obvious=True`（隐藏参数导致解析失败，是驱动点失效的根因）；若该参数用户不应修改，加 `readonly=True` 置灰；三轴都必须含 `[定位点X/Y/Z]`；数学运算（`*` `/` `()` `**`）无限制。
-- **SnapMode 吸附模式**：驱动点常用 `GeometricCenter`（几何中心）和 `EndPoint`（端点）。完整枚举见下方：
+- **SnapMode 选择规则（核心规则）**：截面圆心、拉伸体轴线终点/中点、几何体表面形心、几何体体心 → 一律使用 `SnapMode.GeometricCenter`。**绝大多数情况默认使用 `GeometricCenter`。** 只有明确是几何体角点/顶点时才使用 `EndPoint`。
+- **SnapMode 完整枚举**：
 
 ```python
 class SnapMode(Enum):
-    Invalid=-1, First=0, Nearest=1,
-    MidPoint=1<<2, Center=1<<3, EndPoint=1<<4,
-    Intersection=1<<6, Tangency=1<<7, TangentPoint=1<<8,
-    Perpendicular=1<<9, PerpendicularPoint=1<<10, Parallel=1<<11,
-    Multi3=1<<12, Multi1=1<<14, Multi2=1<<15,
-    GeometricCenter=1<<16,   # 几何中心点
-    Quadrant=1<<17, Extension=1<<18,
-    ApparentIntersection=1<<19, Insertion=1<<20,
-    Node=1<<21, enGetBaseCurve=1<<22
+    Invalid              = -1           # 非法值
+    First                = 0            # 初始化
+    Nearest              = 1            # 最近点
+    MidPoint             = 1 << 2       # 中点
+    Center               = 1 << 3       # 中心点
+    EndPoint             = 1 << 4       # 端点
+    Intersection         = 1 << 6       # 交点
+    Tangency             = 1 << 7       # 相切
+    TangentPoint         = 1 << 8       # 相切点
+    Perpendicular        = 1 << 9       # 垂直
+    PerpendicularPoint   = 1 << 10      # 垂直点
+    Parallel             = 1 << 11      # 平行
+    Multi3               = 1 << 12
+    Multi1               = 1 << 14
+    Multi2               = 1 << 15
+    GeometricCenter      = 1 << 16      # 几何中心点
+    Quadrant             = 1 << 17      # 象限点
+    Extension            = 1 << 18      # 延伸线
+    ApparentIntersection = 1 << 19      # 外观交点
+    Insertion            = 1 << 20      # 插入点
+    Node                 = 1 << 21      # 节点
+    enGetBaseCurve       = 1 << 22      # 基准线
 ```
 
 ### 变换示例

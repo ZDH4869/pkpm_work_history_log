@@ -23,6 +23,7 @@ description: BIMBase Python 建模 Skills & MCP 配置总览。汇总当前环�
    - [bimbase-modeling-agent-interaction — BIMBase 建模交互技能](#22-bimbase-modeling-agent-interaction--bimbase-建模交互技能)
 4. [本地知识库文档](#三本地知识库文档)
 5. [参考代码示例](#四参考代码示例)
+6. [Skills & Markdown 备份路径与同步规则](#五skills--markdown-备份路径与同步规则)
 
 ---
 
@@ -304,6 +305,57 @@ Skills 是 AI Agent 的提示词扩展，通过 markdown 文件导入，对 Agen
 | **已有组件参考** | `D:\BIMbase\PythonScript\BFAComponentLib\已有Py组件参考\` | 椭球等已验证组件 |
 | **自建组件** | `D:\BIMbase\PythonScript\BFAComponentLib\参数化组件样例\自建\` | 小蛮腰、螺钉、扭面等自建示例 |
 | **热水器** | `D:\BIMbase\PythonScript\BFAComponentLib\参数化组件样例\热水器\` | 太阳能集热器、基础热水器等设备模型 |
+
+---
+
+## 五、Skills & Markdown 备份路径与同步规则
+
+### 5.1 完整更新路径清单
+
+**当用户要求更新 Skills、Markdown 或 MCP 内容时，Agent 必须同时更新以下所有路径（及其子文件夹中的对应内容）：**
+
+| 序号 | 更新路径 | 说明 |
+|------|---------|------|
+| 1 | `E:\个人笔记文件备份\notebook\实习\备份skills+mcp+markdown\markdown\` | 备份 Markdown 目录及其子文件夹 |
+| 2 | `E:\个人笔记文件备份\notebook\实习\备份skills+mcp+markdown\skills\` | 备份 Skills 目录及其子文件夹 |
+| 3 | `D:\BIMbase\PythonScript\BFAComponentLib\.trae\skills\` | 本地 Trae Skills 目录及其子文件夹 |
+| 4 | `D:\BIMbase\PythonScript\BFAComponentLib\leder_skills\` | 本地 leder_skills 目录及其子文件夹 |
+| 5 | `D:\BIMbase\PythonScript\BFAComponentLib\BIMBase_AIAgent_建模指南.md` | 本地 AI Agent 建模指南 |
+| 6 | `D:\BIMbase\PythonScript\BFAComponentLib\SKILL.md` | 本地 pyp3d 建模技能主文件 |
+| 7 | `E:\个人笔记文件备份\notebook\实习\目前skills+mcp+md.md` | 笔记目录下的当前 skills/mcp/md 汇总文件 |
+
+### 5.2 备份文件与本地文件的对应关系
+
+| 备份文件 | 本地 Skill 文件 |
+|---------|---------------|
+| `skills\BIMBase_Agent几何理解与验证规则.md` | `.trae\skills\bimbase-agent-geometry-rules\SKILL.md` |
+| `skills\SKILL.md` | `.trae\skills\bimbase-pyp3d-modeling\SKILL.md` |
+| `skills\BIMBase_AIAgent_建模交互技能.md` | `.trae\skills\bimbase-modeling-agent-interaction\SKILL.md` |
+| `skills\BIMBase_几何建模精确交互规范.md` | `.trae\skills\bimbase-precise-modeling-interaction\SKILL.md` |
+| `skills\BIMBase_pyp3d_建模方法函数大全.md` | `.trae\skills\bimbase-pyp3d-function-reference\SKILL.md` |
+| `skills\BIMBase_Skills_MCP_配置总览.md` | `.trae\skills\bimbase-skills-mcp-overview\SKILL.md` |
+| `markdown\BIMBase_Agent几何理解与验证规则.md` | 同上 |
+| `markdown\BIMBase_几何建模精确交互规范.md` | 同上 |
+| `markdown\BIMBase_Skills_MCP_配置总览.md` | 同上 |
+| `markdown\BIMBase_pyp3d_建模方法函数大全.md` | 同上 |
+| `markdown\BIMBase_AIAgent_建模指南.md` | 无对应 Skill（纯本地文档） |
+
+### 5.3 同步更新规则（必须遵守）
+
+**当用户要求更新 Skills、Markdown 或 MCP 内容时，Agent 必须同时更新以下所有路径下的对应文件：**
+
+1. **本地 Skill 路径**：`d:\BIMbase\PythonScript\BFAComponentLib\.trae\skills\`
+2. **备份 Skills 路径**：`E:\个人笔记文件备份\notebook\实习\备份skills+mcp+markdown\skills\`
+3. **备份 Markdown 路径**：`E:\个人笔记文件备份\notebook\实习\备份skills+mcp+markdown\markdown\`
+
+**同步流程：**
+1. 先更新本地 `.trae\skills\` 下的文件
+2. 再更新本地 `leder_skills\` 下的对应文件
+3. 更新本地 `SKILL.md` 和 `BIMBase_AIAgent_建模指南.md`
+4. 更新备份 `skills\` 下的对应文件
+5. 更新备份 `markdown\` 下的对应文件
+6. 更新 `E:\个人笔记文件备份\notebook\实习\目前skills+mcp+md.md`
+7. 确保所有路径下的文件内容保持一致
 
 ---
 

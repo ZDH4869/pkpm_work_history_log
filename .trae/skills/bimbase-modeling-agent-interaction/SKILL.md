@@ -77,14 +77,39 @@ self['旋转角度'] = Attr(45.0, obvious=True, readonly=True)                # 
 > 长方体底面中心点、顶面四个角点需要作为特征点
 
 **AI Agent 需做什么：**
-```python
-# 中心点
-self.setDrivenFeaturePoint('底心', SnapMode.GeometricCenter,
-    '[定位点 X]', '[定位点 Y]', '[定位点 Z]')
 
-# 角点
+**关键规则：绝大多数情况默认使用 `SnapMode.GeometricCenter`。** 截面圆心、拉伸体轴线终点/中点、几何体表面形心、几何体体心 → 一律使用 `GeometricCenter`。只有明确是几何体角点/顶点时才使用 `EndPoint`。
+
+```python
+# 中心点 → GeometricCenter
+self.setDrivenFeaturePoint('底心', SnapMode.GeometricCenter,
+    '[定位点X]', '[定位点Y]', '[定位点Z]')
+
+# 角点 → EndPoint
 self.setDrivenFeaturePoint('角1', SnapMode.EndPoint,
-    '[定位点 X] + [长]/2', '[定位点 Y] + [宽]/2', '[定位点 Z] + [高]')
+    '[定位点X] + [长]/2', '[定位点Y] + [宽]/2', '[定位点Z] + [高]')
+```
+
+**Agent 必须在代码生成前，以表格形式与用户确认每个特征点的位置和 SnapMode 类型：**
+
+| 特征点名称 | 位置描述 | 建议 SnapMode | 是否正确？ |
+|-----------|---------|--------------|-----------|
+| 底心 | 长方体底面几何中心 | `GeometricCenter` | ？ |
+| 角1 | 长方体顶面右前角 | `EndPoint` | ？ |
+
+SnapMode 完整枚举：
+
+```python
+class SnapMode(Enum):
+    Invalid = -1, First = 0, Nearest = 1,
+    MidPoint = 1<<2, Center = 1<<3, EndPoint = 1<<4,
+    Intersection = 1<<6, Tangency = 1<<7, TangentPoint = 1<<8,
+    Perpendicular = 1<<9, PerpendicularPoint = 1<<10, Parallel = 1<<11,
+    Multi3 = 1<<12, Multi1 = 1<<14, Multi2 = 1<<15,
+    GeometricCenter = 1<<16,   # 几何中心点（默认首选）
+    Quadrant = 1<<17, Extension = 1<<18,
+    ApparentIntersection = 1<<19, Insertion = 1<<20,
+    Node = 1<<21, enGetBaseCurve = 1<<22
 ```
 
 ### 5. 其他补充信息
@@ -206,8 +231,8 @@ class 模型名称(Component):
         # ========== 特征点定义（可选）==========
         # self.setDrivenFeaturePoint('名称', SnapMode.GeometricCenter, 'X表达式', 'Y表达式', 'Z表达式')
         # 表达式规则：引用的 Attr 必须 obvious=True；若参数不需修改加 readonly=True；三轴必须含 [定位点X/Y/Z]；数学运算无限制
-        # SnapMode 枚举：GeometricCenter(65536)几何中心/EndPoint(16)端点, MidPoint(4)中点, Center(8)中心点,
-        #   Nearest(1)最近点, Intersection(64)交点, Quadrant(131072)象限点, Node(2097152)节点, 等
+        # SnapMode 选择规则：截面圆心/轴线终点中点/表面形心/体心 → GeometricCenter（默认首选）；角点/顶点 → EndPoint
+        # 必须在代码生成前与用户确认每个特征点的位置和 SnapMode 类型
 
         self.replace()
 
@@ -297,10 +322,10 @@ class 长方体(Component):
         self['高'] = Attr(500, obvious=True, readonly=True)
         self['长方体'] = Attr(None, show=True)
 
-        # 特征点：底面几何中心
+        # 特征点：底面几何中心 → GeometricCenter
         self.setDrivenFeaturePoint('底心', SnapMode.GeometricCenter,
-            '[定位点 X]', '[定位点 Y]', '[定位点 Z]')
-        # 特征点：顶面四个角
+            '[定位点X]', '[定位点Y]', '[定位点Z]')
+        # 特征点：顶面四个角 → EndPoint
         self.setDrivenFeaturePoint('顶角1', SnapMode.EndPoint,
             '[定位点 X] + [长]/2', '[定位点 Y] + [宽]/2', '[定位点 Z] + [高]')
         self.setDrivenFeaturePoint('顶角2', SnapMode.EndPoint,

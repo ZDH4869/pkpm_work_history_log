@@ -40,25 +40,25 @@ class 太阳能热水器(Component):
         # ========== 特征驱动点 ==========
         # 规则：1) 三轴都必须含 [定位点X/Y/Z]  2) 用 /2 替代 *0.5  3) 引用参数必须 obvious=True
         # point1 = 集水管左端面圆心 = 插入点
-        self.setDrivenFeaturePoint('point1', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('point1', SnapMode.GeometricCenter,
             '[定位点X]', '[定位点Y]', '[定位点Z]')
         # 保温桶左端面圆心  实际=(0, 700, 1050)  Z=保温桶中心高度-集水管半径
-        self.setDrivenFeaturePoint('保温桶左端面圆心', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('保温桶左端面圆心', SnapMode.GeometricCenter,
             '[定位点X]+[集水管长度]/2-[保温桶长度]/2',
             '[定位点Y]+[支撑宽度]-[支撑柱直径]/2-[集水管半径]',
             '[定位点Z]+[保温桶中心高度]-[集水管半径]')
         # 保温桶右端面圆心  实际=(1500, 700, 1050)
-        self.setDrivenFeaturePoint('保温桶右端面圆心', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('保温桶右端面圆心', SnapMode.GeometricCenter,
             '[定位点X]+[集水管长度]/2+[保温桶长度]/2',
             '[定位点Y]+[支撑宽度]-[支撑柱直径]/2-[集水管半径]',
             '[定位点Z]+[保温桶中心高度]-[集水管半径]')
         # 左侧水管底部截面圆心  实际=(150, 700, 750)  Z=保温桶中心高度-集水管半径-保温桶半径-50
-        self.setDrivenFeaturePoint('左侧水管底圆心', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('左侧水管底圆心', SnapMode.GeometricCenter,
             '[定位点X]+[集水管长度]/2-[支撑宽度]+[支撑柱直径]/2+[集水管半径]+100',
             '[定位点Y]+[支撑宽度]-[支撑柱直径]/2-[集水管半径]',
             '[定位点Z]+[保温桶中心高度]-[集水管半径]-[保温桶半径]-50')
         # 右侧水管底部截面圆心  实际=(1350, 700, 750)
-        self.setDrivenFeaturePoint('右侧水管底圆心', SnapMode.EndPoint,
+        self.setDrivenFeaturePoint('右侧水管底圆心', SnapMode.GeometricCenter,
             '[定位点X]+[集水管长度]/2+[支撑宽度]-[支撑柱直径]/2-[集水管半径]-100',
             '[定位点Y]+[支撑宽度]-[支撑柱直径]/2-[集水管半径]',
             '[定位点Z]+[保温桶中心高度]-[集水管半径]-[保温桶半径]-50')
