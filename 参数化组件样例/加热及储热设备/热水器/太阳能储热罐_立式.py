@@ -7,8 +7,8 @@ class 太阳能储热罐_立式(Component):
         self['设备名称'] = Attr('太阳能储热罐_立式', obvious=True)
         self['储热罐高度'] = Attr(1500, obvious=True)
         self['储热罐半径'] = Attr(250, obvious=True)
-        self['外扩半径'] = Attr(5, obvious=True)
-        self['水管半径'] = Attr(25, obvious=True)
+        self['外扩厚度'] = Attr(5, obvious=True)
+        self['中部水管半径'] = Attr(25, obvious=True)
         self['顶部水管半径'] = Attr(12.5, obvious=True)
         self['太阳能储热罐'] = Attr(None, show=True)
 
@@ -21,16 +21,16 @@ class 太阳能储热罐_立式(Component):
             '[定位点X]', '[定位点Y]', '[定位点Z]')
         # 底部水管拉伸终点
         self.setDrivenFeaturePoint('底部水管终点', SnapMode.EndPoint,
-            '[定位点X]', '[定位点Y] - [储热罐半径] - [外扩半径]', '[定位点Z] + 105 + [水管半径]')
+            '[定位点X]', '[定位点Y] - [储热罐半径] - [外扩厚度]', '[定位点Z] + 105 + [中部水管半径]')
         # 中部水管拉伸终点
         self.setDrivenFeaturePoint('中部水管终点', SnapMode.EndPoint,
-            '[定位点X]', '[定位点Y] - [储热罐半径] - [外扩半径]', '[定位点Z] + 675 + [水管半径]')
+            '[定位点X]', '[定位点Y] - [储热罐半径] - [外扩厚度]', '[定位点Z] + 675 + [中部水管半径]')
         # 镜像底部水管拉伸终点
         self.setDrivenFeaturePoint('上侧底部水管终点', SnapMode.EndPoint,
-            '[定位点X]', '[定位点Y] - [储热罐半径] - [外扩半径]', '[定位点Z] + [储热罐高度] - 105 - [水管半径]')
+            '[定位点X]', '[定位点Y] - [储热罐半径] - [外扩厚度]', '[定位点Z] + [储热罐高度] - 105 - [中部水管半径]')
         # 镜像中部水管拉伸终点
         self.setDrivenFeaturePoint('上侧中部水管终点', SnapMode.EndPoint,
-            '[定位点X]', '[定位点Y] - [储热罐半径] - [外扩半径]', '[定位点Z] + [储热罐高度] - 675 - [水管半径]')
+            '[定位点X]', '[定位点Y] - [储热罐半径] - [外扩厚度]', '[定位点Z] + [储热罐高度] - 675 - [中部水管半径]')
         # 左侧入水管顶部截面圆心（拉伸终点）
         self.setDrivenFeaturePoint('左侧入水管顶部圆心', SnapMode.EndPoint,
             '[定位点X] - 90 - [顶部水管半径]', '[定位点Y]', '[定位点Z] + [储热罐高度] + 25')
@@ -44,8 +44,8 @@ class 太阳能储热罐_立式(Component):
     def replace(self):
         H = self['储热罐高度']
         R = self['储热罐半径']
-        D = self['外扩半径']
-        r = self['水管半径']
+        D = self['外扩厚度']
+        r = self['中部水管半径']
         r2 = self['顶部水管半径']
 
         # ========== 步骤1: 储热罐圆柱体 ==========
@@ -80,7 +80,8 @@ class 太阳能储热罐_立式(Component):
 
         # ========== 步骤6: 显示屏 ==========
         # 临时坐标系原点(0, 0, 330)，zoy面矩形截面230(Z)×12(Y)
-        # 矩形截面形心(0, -(R+D), 0) 在临时坐标下
+        # 矩形截面形心(0, -R - 0.5*12, 0) = (0, -R - 6, 0) 在临时坐标下
+        # 矩形内边与储热罐外表面齐平(Y = -R)
         display_half_z = 115.0
         display_half_y = 6.0
 
@@ -94,10 +95,11 @@ class 太阳能储热罐_立式(Component):
             Vec2(-display_half_z, display_half_y)
         )
 
-        # 将截面平移到圆弧起点位置：半径R+D，起点(0, -(R+D), 0)
-        rect_at_arc = translate(0, -(R + D), 0) * rect_section
+        # 将截面平移到圆弧起点位置：形心(0, -R - display_half_y, 0)
+        rect_at_arc = translate(0, -R - display_half_y, 0) * rect_section
 
-        # 弧线a：以临时原点为圆心，半径R+D，起点(0,-(R+D),0)，绕Z轴逆时针12°
+        # 弧线a：以临时原点为圆心，起点(0,-R-6,0)，绕Z轴逆时针12°
+        # Arc仅表示旋转角度，扫掠半径由截面位置决定
         path_a = Line(Arc(12 * math.pi / 180))
         sweep_a = Sweep(rect_at_arc, path_a)
         # 放样体a：平移到全局坐标(0, 0, 330)
