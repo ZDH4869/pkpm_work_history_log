@@ -4,6 +4,7 @@ import math
 class 太阳能储热罐_立式(Component):
     def __init__(self):
         Component.__init__(self)
+        self['设备名称'] = Attr('太阳能储热罐_立式', obvious=True)
         self['储热罐高度'] = Attr(1500, obvious=True)
         self['储热罐半径'] = Attr(250, obvious=True)
         self['外扩半径'] = Attr(5, obvious=True)

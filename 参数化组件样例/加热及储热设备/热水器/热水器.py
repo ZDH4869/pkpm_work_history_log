@@ -4,8 +4,8 @@ import math
 class 热水器(Component):
     def __init__(self):
         Component.__init__(self)
-        # ========== 名称 ==========
-        self['名称'] = Attr('Python参数化组件 8', obvious=True)
+        # ========== 设备名称 ==========
+        self['设备名称'] = Attr('热水器', obvious=True)
 
         # ========== 保温桶参数 ==========
         self['保温桶半径'] = Attr(400.0, obvious=True)

@@ -5,6 +5,8 @@ import math
 class pythonModel(Component):
     def __init__(self):
         Component.__init__(self)
+        # 设备名称
+        self['设备名称'] = Attr('烟道式燃气快速热水器', obvious=True)
         # 水箱参数
         self['水箱长度'] = Attr(300.0, obvious=True)
         self['水箱宽度'] = Attr(200.0, obvious=True)
@@ -39,8 +41,8 @@ class pythonModel(Component):
         self['显示屏长度'] = Attr(100.0, obvious=True)
         self['显示屏宽度'] = Attr(10.0, obvious=True)
         # 出水管群偏移参数
-        self['左侧出水管群间距'] = Attr(0.0, obvious=True)
-        self['右侧出水管群间距'] = Attr(0.0, obvious=True)
+        self['左侧出水管群间距'] = Attr(100.0, obvious=True)
+        self['右侧出水管群间距'] = Attr(50.0, obvious=True)
         self['中心出水管群X偏移'] = Attr(0.0, obvious=True)
         self['中心出水管群Y偏移'] = Attr(0.0, obvious=True)
         # 阀轴柱参数
@@ -67,13 +69,18 @@ class pythonModel(Component):
             '[定位点Y]+[中心出水管群Y偏移]',
             '[定位点Z]-[中心出水管高度]')
         self.setDrivenFeaturePoint('左侧出水管底部', SnapMode.EndPoint,
-            '[定位点X]-[水箱长度]/3+[左侧出水管群间距]',
-            '[定位点Y]',
+            '[定位点X]+[中心出水管群X偏移]-[左侧出水管群间距]',
+            '[定位点Y]+[中心出水管群Y偏移]',
             '[定位点Z]-[中心出水管高度]')
         self.setDrivenFeaturePoint('右侧出水管底部', SnapMode.EndPoint,
-            '[定位点X]+[水箱长度]/6+[右侧出水管群间距]',
-            '[定位点Y]',
+            '[定位点X]+[中心出水管群X偏移]+[右侧出水管群间距]',
+            '[定位点Y]+[中心出水管群Y偏移]',
             '[定位点Z]-[中心出水管高度]')
+        # 配电口特征点（螺栓a拉伸起点偏移(-左侧出水管群间距-中心出水管半径-水箱长度/10, 0, 0)）
+        self.setDrivenFeaturePoint('配电口', SnapMode.EndPoint,
+            '[定位点X]+[中心出水管群X偏移]-[左侧出水管群间距]-[中心出水管半径]-[水箱长度]/10',
+            '[定位点Y]+[中心出水管群Y偏移]',
+            '[定位点Z]')
 
         self.replace()
 
@@ -249,10 +256,8 @@ class pythonModel(Component):
 
         # ====== Step 12: 三组出水管群 ======
         center_group = translate(center_x, center_y, 0) * pipe_parts
-        right_x = L / 6.0 + right_spacing
-        right_group = translate(right_x, 0, 0) * pipe_parts
-        left_x = -L / 3.0 + left_spacing
-        left_group = translate(left_x, 0, 0) * pipe_parts
+        right_group = translate(center_x + right_spacing, center_y, 0) * pipe_parts
+        left_group = translate(center_x - left_spacing, center_y, 0) * pipe_parts
 
         # ====== Step 13: 显示屏体 ======
         # 外水箱形心 = (-L/2, -W/2, H/2)
