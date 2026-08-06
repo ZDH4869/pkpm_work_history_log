@@ -94,7 +94,7 @@ echo  步骤 2/4: 配置 BIMBase 建模脚本 Python 解释器
 echo  (仅用于 IDE 运行 .py 建模脚本，与 MCP 运行互不影响)
 echo ──────────────────────────────────────────────────────────
 echo.
-set /p "BIM_PYTHON=请输入 BIMBase 内置 Python 路径 (例如 D:\BIMbase\PythonScript\python-3.7.9-embed-amd64\python.exe): "
+set /p "BIM_PYTHON=请输入 BIMBase 内置 Python 路径 (例如 D:\BIMBase KIT official 2026 R1.0\BIMBase KIT 2026\PythonScript\python-3.7.9-embed-amd64\python.exe): "
 
 if "%BIM_PYTHON%"=="" (
     echo [错误] 路径不能为空，请重新输入。

@@ -393,14 +393,14 @@ if __name__ == "__main__":
 所有建模脚本运行在 **BIMBase 内嵌 Python 3.7.9**：
 
 ```
-D:\BIMbase\PythonScript\python-3.7.9-embed-amd64\python.exe
+D:\BIMBase KIT official 2026 R1.0\BIMBase KIT 2026\PythonScript\python-3.7.9-embed-amd64\python.exe
 ```
 
 ### pyp3d 库路径
 
 ```
-D:\BIMbase\PythonScript\python-3.7.9-embed-amd64\Lib\site-packages\pyp3d
-D:\BIMbase\PythonScript\python-3.7.9-embed-amd64\Lib\site-packages\
+D:\BIMBase KIT official 2026 R1.0\BIMBase KIT 2026\PythonScript\python-3.7.9-embed-amd64\Lib\site-packages\pyp3d
+D:\BIMBase KIT official 2026 R1.0\BIMBase KIT 2026\PythonScript\python-3.7.9-embed-amd64\Lib\site-packages\
 ```
 
 ### 依赖包安装（需要时）
@@ -408,10 +408,10 @@ D:\BIMbase\PythonScript\python-3.7.9-embed-amd64\Lib\site-packages\
 当建模需要额外依赖包（如 numpy）时，使用国内镜像源安装：
 
 ```powershell
-cd "D:\BIMbase\PythonScript\python-3.7.9-embed-amd64"
+cd "D:\BIMBase KIT official 2026 R1.0\BIMBase KIT 2026\PythonScript\python-3.7.9-embed-amd64"
 .\python.exe .\get-pip.py
 .\pip.exe install numpy -i https://pypi.tuna.tsinghua.edu.cn/simple
-cd "D:\BIMbase\PythonScript\python-3.7.9-embed-amd64\Scripts"
+cd "D:\BIMBase KIT official 2026 R1.0\BIMBase KIT 2026\PythonScript\python-3.7.9-embed-amd64\Scripts"
 .\pip.exe install numpy
 ```
 

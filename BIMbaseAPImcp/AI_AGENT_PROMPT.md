@@ -10,7 +10,7 @@
 请帮我安装配置 BIMBase MCP Server，项目路径：{项目本地路径或GitHub链接}
 
 我的环境信息：
-- BIMBase 内置 Python 路径：{BIMBase Python 路径，如 D:\BIMbase\PythonScript\python-3.7.9-embed-amd64\python.exe}
+- BIMBase 内置 Python 路径：{BIMBase Python 路径，如 D:\BIMBase KIT official 2026 R1.0\BIMBase KIT 2026\PythonScript\python-3.7.9-embed-amd64\python.exe}
 - MCP 运行 Python 路径：{MCP Python 路径，如 D:\Miniconda\python.exe}（需要 Python >= 3.10）
 
 请按照项目中的 install.bat 脚本逻辑完成以下步骤：

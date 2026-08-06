@@ -412,6 +412,6 @@ Skills 是 AI Agent 的提示词扩展，通过 markdown 文件导入，对 Agen
 ---
 
 > **技术备注：**
-> - BIMBase 建模脚本运行在 **内嵌 Python 3.7.9** (`D:\BIMbase\PythonScript\python-3.7.9-embed-amd64\python.exe`)
+> - BIMBase 建模脚本运行在 **内嵌 Python 3.7.9** (`D:\BIMBase KIT official 2026 R1.0\BIMBase KIT 2026\PythonScript\python-3.7.9-embed-amd64\python.exe`)
 > - MCP 服务器需要 **Python >= 3.10** (`D:\Miniconda\python.exe`)，两者是不同的解释器
 > - 本文件由 AI Agent 自动生成，随配置变更应同步更新
