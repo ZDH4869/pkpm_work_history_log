@@ -4,11 +4,12 @@ class 拱形屋面_单拱(Component):
     def __init__(self):
         Component.__init__(self)
         self['构件名称']=Attr('拱形屋面_单拱', obvious = True, readonly = False)
-        self['拱形半径']=Attr(1360.0, obvious = True, readonly = False)
-        self['弦长']=Attr(1800.0, obvious = True)
-        self['拱墙宽度']=Attr(500.0, obvious = True)
-        self['墙体厚度'] = Attr(60.0, obvious = True)
-        self['拱顶底墙高']=Attr(2000.0, obvious = True)
+        self['外拱形半径']=Attr(8000.0, obvious = True, readonly = False)
+        self['弦长']=Attr(13000.0, obvious = True)
+        self['拱墙厚度'] = Attr(500.0, obvious = True)
+        self['拱墙宽度']=Attr(5000.0, obvious = True)
+        self['拱顶底墙高']=Attr(5500.0, obvious = True)
+        self['屋面厚度']=Attr(200.0, obvious = True)
        
         self['拱形屋面_单拱'] = Attr(None, show = True)
         
@@ -17,10 +18,11 @@ class 拱形屋面_单拱(Component):
     @export
     def replace(self): 
         L = self['弦长']
-        R = self['拱形半径']
-        W  = self['墙体厚度']
+        R = self['外拱形半径']
+        W  = self['拱墙厚度']
         wall_height = self['拱顶底墙高']
         offset = self['拱墙宽度']
+        H = self['屋面厚度']
 
         # ================================================================
         # 公共计算：拱矢高与圆弧角度
@@ -60,7 +62,38 @@ class 拱形屋面_单拱(Component):
         矩形壳体 = Sweep(截面_XOZ, 拉伸路径)
 
         # ================================================================
-        # 全屋切墙布尔体: 将矩形壳体掏空为墙体
+        # 拱形屋面壳体 (Section + Sweep沿Y轴拉伸)
+        # 在XOY面创建拱形壳体截面 → rotx转XOZ → 沿Y轴正向拉伸W
+        # 外弧与矩形壳体顶部弧线使用完全相同的Arc定义，保证拟合精度一致
+        # ================================================================
+        # 内弧端点计算
+        inner_half = math.sqrt((R - H)**2 - (L/2)**2)
+        y_inner_end = -z0 + inner_half
+        inner_angle_pos = math.atan2(inner_half, L/2)
+        
+        # 外弧: 与矩形壳体顶部弧线完全相同的定义
+        弧线_outer = translate(L/2, -z0) * rotate(angle_start) * scale(R, R) * Arc(-span)
+        
+        # 内弧: 从 (L, y_inner_end) 到 (0, y_inner_end) 逆时针
+        弧线_inner = translate(L/2, -z0) * rotate(inner_angle_pos) * scale(R-H, R-H) * Arc(pi - 2*inner_angle_pos)
+        
+        # 封闭截面: (0,0) → 外弧 → (L,0) → (L,y_inner_end) → 内弧 → (0,y_inner_end) → 闭合
+        截面_拱形壳体 = Section(
+            Vec2(0, 0),
+            弧线_outer,
+            Vec2(L, 0),
+            Vec2(L, y_inner_end),
+            弧线_inner,
+            Vec2(0, y_inner_end),
+        )
+        
+        # 截面从XOY旋转到XOZ平面，沿Y轴正向拉伸W
+        截面_XOZ_壳体 = rotx(pi/2) * 截面_拱形壳体
+        拉伸路径_壳体 = Line(Vec3(0, 0, 0), Vec3(0, W, 0))
+        拱形壳体 = Sweep(截面_XOZ_壳体, 拉伸路径_壳体)
+
+        # ================================================================
+        # 全屋切墙布尔体: 将矩形壳体掏空为墙体，再减去拱形壳体形成拱壳凹槽
         #   截面在 XOY 面绘制，沿 Z 轴从 R 拉伸到 -wall_height
         #   截面角点位于 (wall_thickness, wall_thickness)，
         #   X 向宽度 = L - 2*wall_thickness，Y 向长度 = W - 2*wall_thickness
@@ -72,7 +105,7 @@ class 拱形屋面_单拱(Component):
             Vec2(L, W),
             Vec2(0+offset, W),
         )
-        矩形壳体_结果 = 矩形壳体 - Sweep(全屋切墙截面, 切墙路径)
+        矩形壳体_结果 = 矩形壳体 - Sweep(全屋切墙截面, 切墙路径) - 拱形壳体
 
         self['拱形屋面_单拱'] = 矩形壳体_结果
 

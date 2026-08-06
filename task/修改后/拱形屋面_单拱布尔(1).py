@@ -3,20 +3,20 @@ from pyp3d import *
 class 拱形屋面_单拱(Component):
     def __init__(self):
         Component.__init__(self)
-        self['构件名称']=Attr('拱形屋面_单拱', obvious = True, readonly = False)
-        self['拱形半径']=Attr(1360.0, obvious = True, readonly = False)
-        self['弦长']=Attr(1800.0, obvious = True)
-        self['屋面长度'] = Attr(3000.0, obvious = True)
-        self['屋面厚度']=Attr(60.0, obvious = True)
+        self['构件名称']=Attr('拱形屋面_单拱布尔', obvious = True, readonly = False)
+        self['拱形半径']=Attr(8000.0, obvious = True, readonly = False)
+        self['弦长']=Attr(13000.0, obvious = True)
+        self['屋面长度'] = Attr(20000.0, obvious = True)
+        self['屋面厚度']=Attr(200.0, obvious = True)
 
         # 分组：布尔位置
         self['布尔位置']=Attr("无", obvious = True, readonly = False, combo= ["无","前左","前右","后左","后右"], group='布尔位置')
-        self['布尔长']=Attr(900.0, obvious = True, group='布尔位置') 
-        self['布尔宽']=Attr(400.0, obvious = True, group='布尔位置') 
+        self['布尔长']=Attr(9000.0, obvious = True, group='布尔位置') 
+        self['布尔宽']=Attr(6000.0, obvious = True, group='布尔位置') 
 
         # 分组：墙体
-        self['拱顶底墙高']=Attr(2000.0, obvious = True, group='墙体')
-        self['墙体厚度']=Attr(60.0, obvious = True, group='墙体')
+        self['拱顶底墙高']=Attr(5500.0, obvious = True, group='墙体')
+        self['墙体厚度']=Attr(200.0, obvious = True, group='墙体')
        
         self['拱形屋面_单拱'] = Attr(None, show = True)
         
@@ -227,10 +227,18 @@ class 拱形屋面_单拱(Component):
                 Vec2(L - wall_thickness, W - wall_thickness),
                 Vec2(wall_thickness, W - wall_thickness),
             )
-            矩形壳体_结果 = 矩形壳体 - Sweep(全屋切墙截面, 切墙路径)
+            矩形壳体_内部布尔 = Sweep(全屋切墙截面, 切墙路径)
+            矩形壳体_结果 = 矩形壳体 - 矩形壳体_内部布尔
+            # 矩形壳体_结果 = 矩形壳体 - Sweep(全屋切墙截面, 切墙路径)
 
-        # 两个独立部件组合输出 (combine 不做布尔合并，保留各自属性)
-        self['拱形屋面_单拱'] = combine(拱形壳体_结果, 矩形壳体_结果)
+        # 当拱顶底高数值为 0 时，则判断是否需要切去拱顶两侧竖直三角部分
+        if wall_height == 0:
+            #使用长方体切去拱顶两侧竖直三角部分，使其水平
+            拱形壳体_布尔 = translate(0,0,-H*10)*scale(L,W,H*10)*Cube()
+            拱形壳体_结果 = 拱形壳体 - 拱形壳体_布尔
+            self['拱形屋面_单拱'] = 拱形壳体_结果 + 矩形壳体_结果
+        else:
+            self['拱形屋面_单拱'] = 拱形壳体_结果 + 矩形壳体_结果
                
 
        

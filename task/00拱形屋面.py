@@ -3,20 +3,15 @@ class 拱形屋面_单拱(Component):
     def __init__(self):
         Component.__init__(self)
         self['构件名称']=Attr('拱形屋面_单拱', obvious = True, readonly = False)
-        self['拱形半径']=Attr(1360.0, obvious = True, readonly = False)
-        self['弦长']=Attr(1800.0, obvious = True)
-        self['屋面长度'] = Attr(3000.0, obvious = True)
-        self['屋面厚度']=Attr(60.0, obvious = True)
+        self['拱形半径']=Attr(8000.0, obvious = True, readonly = False)
+        self['弦长']=Attr(13000.0, obvious = True)
+        self['屋面长度'] = Attr(20000.0, obvious = True)
+        self['屋面厚度']=Attr(200.0, obvious = True)
 
         # 分组：布尔位置
         self['布尔位置']=Attr("无", obvious = True, readonly = False, combo= ["无","前左","前右","后左","后右"], group='布尔位置')
-        self['布尔长']=Attr(900.0, obvious = True, group='布尔位置') 
-        self['布尔宽']=Attr(400.0, obvious = True, group='布尔位置') 
-
-        # 分组：墙体
-        self['墙体开关']=Attr("无", obvious = True, readonly = False, combo= ["无","前左","前右","后左","后右"], group='布尔位置')
-        self['拱顶底墙高']=Attr(900.0, obvious = True, group='布尔位置') 
-        self['墙体厚度']=Attr(400.0, obvious = True, group='布尔位置') 
+        self['布尔长']=Attr(9000.0, obvious = True, group='布尔位置') 
+        self['布尔宽']=Attr(4000.0, obvious = True, group='布尔位置') 
        
         self['拱形屋面_单拱'] = Attr(None, show = True)
         
