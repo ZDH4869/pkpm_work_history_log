@@ -319,113 +319,134 @@ def wsl(data):
     # === 坐标同步逻辑 ===
     # 从光标点选的关键点列表读取控制点
     KeyPoint = data['关键点']
-    current_hash = _hash_points(KeyPoint)
+    point_count = len(KeyPoint)
 
-    # 关键点hash变化时（用户通过MultiPointPlace修改了控制点），同步到独立XYZ参数
-    if current_hash != data['_关键点哈希'] and len(KeyPoint) == 10:
-        data['起点X'] = round(KeyPoint[0].x, 6)
-        data['起点Y'] = round(KeyPoint[0].y, 6)
-        data['起点Z'] = round(KeyPoint[0].z, 6)
-        for i in range(1, 9):
-            data[f'中间点{i}X'] = round(KeyPoint[i].x, 6)
-            data[f'中间点{i}Y'] = round(KeyPoint[i].y, 6)
-            data[f'中间点{i}Z'] = round(KeyPoint[i].z, 6)
-        data['终点X'] = round(KeyPoint[9].x, 6)
-        data['终点Y'] = round(KeyPoint[9].y, 6)
-        data['终点Z'] = round(KeyPoint[9].z, 6)
-        data['_关键点哈希'] = current_hash
+    # 点数控制：超过10个时截断，只保留前10个
+    if point_count > 10:
+        data['关键点'] = KeyPoint[:10]
+        KeyPoint = KeyPoint[:10]
+        point_count = 10
 
-    # 从独立XYZ参数读取控制点（始终作为几何计算的真实数据源）
-    raw_points = [
-        (float(data['起点X']), float(data['起点Y']), float(data['起点Z'])),
-        (float(data['中间点1X']), float(data['中间点1Y']), float(data['中间点1Z'])),
-        (float(data['中间点2X']), float(data['中间点2Y']), float(data['中间点2Z'])),
-        (float(data['中间点3X']), float(data['中间点3Y']), float(data['中间点3Z'])),
-        (float(data['中间点4X']), float(data['中间点4Y']), float(data['中间点4Z'])),
-        (float(data['中间点5X']), float(data['中间点5Y']), float(data['中间点5Z'])),
-        (float(data['中间点6X']), float(data['中间点6Y']), float(data['中间点6Z'])),
-        (float(data['中间点7X']), float(data['中间点7Y']), float(data['中间点7Z'])),
-        (float(data['中间点8X']), float(data['中间点8Y']), float(data['中间点8Z'])),
-        (float(data['终点X']), float(data['终点Y']), float(data['终点Z'])),
-    ]
+    # 更新放置提示
+    remaining = 10 - point_count
+    data['放置点数量'] = point_count
+    if point_count < 10:
+        data['放置提示'] = f'仍需放置{remaining}个点'
+    else:
+        data['放置提示'] = '放置完成'
 
-    points = _remove_consecutive_duplicates(raw_points)
-    if len(points) == 1:
-        points.append(_add(points[0], (diameter * 2.0, 0.0, 0.0)))
+    # 点数不足10个时，清空模型但不return（必须让wsl完整执行，否则参数变更不生效）
+    if point_count < 10:
+        data['软管'] = None
+        data['管道长度'] = 0.0
+        data['实际最小圆角半径'] = 0.0
+    else:
+        # 关键点hash变化时（用户通过MultiPointPlace修改了控制点），同步到独立XYZ参数
+        current_hash = _hash_points(KeyPoint)
+        if current_hash != data['_关键点哈希'] and point_count == 10:
+            data['起点X'] = round(KeyPoint[0].x, 6)
+            data['起点Y'] = round(KeyPoint[0].y, 6)
+            data['起点Z'] = round(KeyPoint[0].z, 6)
+            for i in range(1, 9):
+                data[f'中间点{i}X'] = round(KeyPoint[i].x, 6)
+                data[f'中间点{i}Y'] = round(KeyPoint[i].y, 6)
+                data[f'中间点{i}Z'] = round(KeyPoint[i].z, 6)
+            data['终点X'] = round(KeyPoint[9].x, 6)
+            data['终点Y'] = round(KeyPoint[9].y, 6)
+            data['终点Z'] = round(KeyPoint[9].z, 6)
+            data['_关键点哈希'] = current_hash
 
-    detour_distance = max(requested_radius, diameter * 1.5)
-    points = _expand_reversing_corners(points, detour_distance)
-    points = _relax_points_for_safe_bends(
-        points,
-        requested_radius,
-        outer_radius * 1.05
-    )
-    center_points, tangent_points, pipe_length, actual_radii = _build_rounded_path(
-        points, requested_radius
-    )
+        # 从独立XYZ参数读取控制点（始终作为几何计算的真实数据源）
+        raw_points = [
+            (float(data['起点X']), float(data['起点Y']), float(data['起点Z'])),
+            (float(data['中间点1X']), float(data['中间点1Y']), float(data['中间点1Z'])),
+            (float(data['中间点2X']), float(data['中间点2Y']), float(data['中间点2Z'])),
+            (float(data['中间点3X']), float(data['中间点3Y']), float(data['中间点3Z'])),
+            (float(data['中间点4X']), float(data['中间点4Y']), float(data['中间点4Z'])),
+            (float(data['中间点5X']), float(data['中间点5Y']), float(data['中间点5Z'])),
+            (float(data['中间点6X']), float(data['中间点6Y']), float(data['中间点6Z'])),
+            (float(data['中间点7X']), float(data['中间点7Y']), float(data['中间点7Z'])),
+            (float(data['中间点8X']), float(data['中间点8Y']), float(data['中间点8Z'])),
+            (float(data['终点X']), float(data['终点Y']), float(data['终点Z'])),
+        ]
 
-    data['管道长度'] = round(pipe_length, 2)
-    data['实际最小圆角半径'] = (
-        round(min(actual_radii), 2) if actual_radii else 0.0
-    )
+        points = _remove_consecutive_duplicates(raw_points)
+        if len(points) == 1:
+            points.append(_add(points[0], (diameter * 2.0, 0.0, 0.0)))
 
-    circle_segments = 24
-    frames = []
-    outer_contours = []
+        detour_distance = max(requested_radius, diameter * 1.5)
+        points = _expand_reversing_corners(points, detour_distance)
+        points = _relax_points_for_safe_bends(
+            points,
+            requested_radius,
+            outer_radius * 1.05
+        )
+        center_points, tangent_points, pipe_length, actual_radii = _build_rounded_path(
+            points, requested_radius
+        )
 
-    first_tangent = _unit(tangent_points[0])
-    normal = _stable_perpendicular(first_tangent)
+        data['管道长度'] = round(pipe_length, 2)
+        data['实际最小圆角半径'] = (
+            round(min(actual_radii), 2) if actual_radii else 0.0
+        )
 
-    def make_contour(center, section_normal, section_binormal, radius):
-        contour = []
-        for index in range(circle_segments + 1):
-            angle = 2.0 * math.pi * index / circle_segments
-            offset = _add(
-                _mul(section_normal, radius * math.cos(angle)),
-                _mul(section_binormal, radius * math.sin(angle))
+        circle_segments = 24
+        frames = []
+        outer_contours = []
+
+        first_tangent = _unit(tangent_points[0])
+        normal = _stable_perpendicular(first_tangent)
+
+        def make_contour(center, section_normal, section_binormal, radius):
+            contour = []
+            for index in range(circle_segments + 1):
+                angle = 2.0 * math.pi * index / circle_segments
+                offset = _add(
+                    _mul(section_normal, radius * math.cos(angle)),
+                    _mul(section_binormal, radius * math.sin(angle))
+                )
+                point = _add(center, offset)
+                contour.append(Vec3(point[0], point[1], point[2]))
+            return contour
+
+        for center, tangent in zip(center_points, tangent_points):
+            tangent = _unit(tangent, first_tangent)
+            projected_normal = _sub(normal, _mul(tangent, _dot(normal, tangent)))
+            if _length(projected_normal) < EPSILON:
+                projected_normal = _stable_perpendicular(tangent)
+
+            normal = _unit(projected_normal, _stable_perpendicular(tangent))
+            binormal = _unit(_cross(tangent, normal))
+            frames.append((center, tangent, normal, binormal))
+            outer_contours.append(make_contour(center, normal, binormal, outer_radius))
+
+        passage_extension = max(wall_thickness, diameter * 0.02)
+        first_center, first_tangent, first_normal, first_binormal = frames[0]
+        last_center, last_tangent, last_normal, last_binormal = frames[-1]
+        inner_contours = [
+            make_contour(
+                _sub(first_center, _mul(first_tangent, passage_extension)),
+                first_normal,
+                first_binormal,
+                inner_radius
             )
-            point = _add(center, offset)
-            contour.append(Vec3(point[0], point[1], point[2]))
-        return contour
-
-    for center, tangent in zip(center_points, tangent_points):
-        tangent = _unit(tangent, first_tangent)
-        projected_normal = _sub(normal, _mul(tangent, _dot(normal, tangent)))
-        if _length(projected_normal) < EPSILON:
-            projected_normal = _stable_perpendicular(tangent)
-
-        normal = _unit(projected_normal, _stable_perpendicular(tangent))
-        binormal = _unit(_cross(tangent, normal))
-        frames.append((center, tangent, normal, binormal))
-        outer_contours.append(make_contour(center, normal, binormal, outer_radius))
-
-    passage_extension = max(wall_thickness, diameter * 0.02)
-    first_center, first_tangent, first_normal, first_binormal = frames[0]
-    last_center, last_tangent, last_normal, last_binormal = frames[-1]
-    inner_contours = [
-        make_contour(
-            _sub(first_center, _mul(first_tangent, passage_extension)),
-            first_normal,
-            first_binormal,
-            inner_radius
-        )
-    ]
-    for center, tangent, section_normal, section_binormal in frames:
+        ]
+        for center, tangent, section_normal, section_binormal in frames:
+            inner_contours.append(
+                make_contour(center, section_normal, section_binormal, inner_radius)
+            )
         inner_contours.append(
-            make_contour(center, section_normal, section_binormal, inner_radius)
+            make_contour(
+                _add(last_center, _mul(last_tangent, passage_extension)),
+                last_normal,
+                last_binormal,
+                inner_radius
+            )
         )
-    inner_contours.append(
-        make_contour(
-            _add(last_center, _mul(last_tangent, passage_extension)),
-            last_normal,
-            last_binormal,
-            inner_radius
-        )
-    )
 
-    outer_pipe = RuledSweepPlus(outer_contours)
-    inner_passage = RuledSweepPlus(inner_contours)
-    data['软管'] = (outer_pipe - inner_passage).color(0.08, 0.47, 0.68, 1.0)
+        outer_pipe = RuledSweepPlus(outer_contours)
+        inner_passage = RuledSweepPlus(inner_contours)
+        data['软管'] = (outer_pipe - inner_passage).color(0.08, 0.47, 0.68, 1.0)
 
 
 if __name__ == '__main__':
@@ -465,6 +486,8 @@ if __name__ == '__main__':
         '中间点7X': 5200.0, '中间点7Y': 800.0, '中间点7Z': 3200.0,
         '中间点8X': 5600.0, '中间点8Y': -300.0, '中间点8Z': 3400.0,
         '终点X': 6000.0, '终点Y': 0.0, '终点Z': 3600.0,
+        '放置提示': '仍需放置10个点',
+        '放置点数量': 0,
     })
 
     data.setup('公称直径', obvious=True)
@@ -474,6 +497,9 @@ if __name__ == '__main__':
     data.setup('实际最小圆角半径', obvious=True, readonly=True)
     data.setup('软管', show=True)
     data.setup('构件名称', obvious=True)
+
+    data.setup('放置提示', obvious=True, readonly=True)
+    data.setup('放置点数量', obvious=True, readonly=True)
 
     data.setup('_关键点哈希', obvious=False)
 
