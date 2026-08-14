@@ -217,6 +217,8 @@ box = Box(
 ).color(1, 1, 0, 0.5)
 ```
 
+> **重要提醒**：`Box` 的底面/顶面原点在矩形角点（非形心），定位时需额外计算平移偏移。**对于等截面矩形拉伸体，推荐使用 `Section + Loft` 模式**（见 4.2 节），形心在原点，定位更直观准确。
+
 > 来源：[geometry_Box.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/geometric_interface/geometry_Box.md)
 
 ---
@@ -323,6 +325,20 @@ Section(point1, geom1, point2, geom2, ...)
 - 相邻元素首尾相接（前一终点 = 后一起点）
 - 支持截面间布尔操作：`Section(...) - Section(...)`
 
+**矩形截面形心规范（必读）：**
+
+矩形截面的形心是几何中心，四个顶点关于形心对称分布。创建矩形截面时，**必须使用 `translate(-L/2, -W/2, 0)` 将截面平移至形心在原点**：
+
+```python
+# 正确：形心在原点（推荐）
+rect_section = translate(-L/2, -W/2, 0) * Section(
+    Vec2(0, 0), Vec2(L, 0), Vec2(L, W), Vec2(0, W)
+)
+
+# 错误：形心不在原点，定位困难
+rect_section = Section(Vec2(0,0), Vec2(L,0), Vec2(L,W), Vec2(0,W))
+```
+
 **示例：**
 ```python
 # 矩形截面（4个Vec2角点自动闭合）
@@ -373,11 +389,17 @@ Loft(*section_list)                              # 列表解包
 
 **示例：**
 ```python
-# 示例1：等截面拉伸（两截面间距 H）
-test_section = Section(Vec2(0,0), Vec2(L,0), Vec2(L,W), Vec2(0,W))
-loft = Loft(test_section, translate(0, 0, H) * test_section)
+# 示例1：矩形截面等截面拉伸（推荐：Section+Loft 替代 Box/Cube）
+# 形心在原点，沿Z+拉伸 H
+rect_section = translate(-L/2, -W/2, 0) * Section(
+    Vec2(0, 0), Vec2(L, 0), Vec2(L, W), Vec2(0, W)
+)
+loft = Loft(
+    translate(0, 0, z_centroid) * rect_section,
+    translate(0, 0, z_centroid + H) * rect_section
+)
 
-# 示例2：渐变截面（三截面：大→中→小）
+# 示例2：圆形渐变截面（三截面：大→中→小）
 base = Section(scale(D1) * Arc(2 * pi))              # 基准圆截面
 sec1 = translate(0, 0, 0) * base                     # 起始
 sec2 = scale(0.75) * translate(0, 0, H/2) * base     # 中间缩小
@@ -930,3 +952,100 @@ if __name__ == "__main__":
 > - [参数化组件样例/基本体教学](file:///D:/BIMbase/PythonScript/BFAComponentLib/参数化组件样例/基本体教学)
 > - [参数化组件样例/造型构件](file:///D:/BIMbase/PythonScript/BFAComponentLib/参数化组件样例/造型构件)
 > - [参数化组件样例/自建/建模方法分析.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/参数化组件样例/自建/建模方法分析.md)
+
+---
+
+## 十二、给部件表面添加散热片（线性阵列）
+
+给长方体部件的外表面添加线性阵列的散热片，散热片为矩形截面长方体，沿表面方向线性排列。
+
+### 核心思路
+
+1. 使用 `rect_section_xoy()` 创建散热片截面（形心在原点）
+2. 使用 `Loft` 沿 Z 方向拉伸得到单个散热片
+3. 通过循环计算阵列位置，将散热片平移到各个位置
+4. 使用 `combine()` 合并所有散热片
+
+### 关键参数
+
+| 参数 | 说明 |
+|------|------|
+| 散热片厚度 | 沿阵列方向的尺寸（mm） |
+| 散热片深度 | 沿外伸方向的尺寸（mm） |
+| 散热片高度 | 散热片高度（mm），通常与主体高度相关 |
+| 散热片间距 | 阵列间距，中心到中心（mm） |
+| 散热片数量 | `int((主体边长 - 散热片厚度) / 散热片间距) + 1` |
+
+### 居中放置
+
+阵列整体形心与阵列面形心重合：
+
+```python
+start_pos = -(散热片数量 - 1) * 散热片间距 / 2.0
+```
+
+### 散热片与主体表面的贴附关系
+
+散热片贴在主体表面的**外侧**：
+- 散热片靠近主体的面与主体表面**重合**
+- 散热片形心在主体表面之外 `散热片深度/2` 处
+- 例如：主体 X 正向面在 `X = half_side`，散热片形心 `X = half_side + 散热片深度/2`
+
+### 完整示例代码
+
+```python
+# ========== 散热片阵列：散热箱体外侧三个面的线性阵列 ==========
+散热片厚度 = 10.0       # 沿阵列方向的厚度
+散热片深度 = 20.0       # 沿外伸方向的深度
+散热片高度 = 0.85 * 散热箱拉伸距离  # 散热片高度
+散热片间距 = 50.0       # 阵列间距（中心到中心）
+
+# 散热片截面A：用于X向面，深度(X方向)=20，厚度(Y方向)=10
+散热片截面_X面 = rect_section_xoy(散热片深度, 散热片厚度)
+
+# 散热片截面B：用于Y向面，厚度(X方向)=10，深度(Y方向)=20
+散热片截面_Y面 = rect_section_xoy(散热片厚度, 散热片深度)
+
+# 计算每个面的散热片数量
+散热片数量 = int((散热箱边长 - 散热片厚度) / 散热片间距) + 1
+
+half_side = 散热箱边长 / 2.0
+# 居中放置：阵列整体形心与阵列面形心重合
+start_pos = -(散热片数量 - 1) * 散热片间距 / 2.0
+
+# 散热片Z方向范围（居中于主体中点）
+散热片Z底 = 散热箱中点Z - 散热片高度 / 2.0
+散热片Z顶 = 散热箱中点Z + 散热片高度 / 2.0
+
+# 创建单个散热片（截面在XOY面，形心在(cx,cy)，沿Z拉伸）
+def 创建散热片(section, cx, cy):
+    return Loft(
+        translate(cx, cy, 散热片Z底) * section,
+        translate(cx, cy, 散热片Z顶) * section
+    )
+
+散热片列表 = []
+
+# 面A：Y负向面（沿Y负向视角查看的正面），散热片贴在外侧，阵列沿X方向
+fin_cy = -half_side - 散热片深度 / 2.0
+for i in range(散热片数量):
+    fin_cx = start_pos + i * 散热片间距
+    散热片列表.append(创建散热片(散热片截面_Y面, fin_cx, fin_cy))
+
+# 面B：Y正向面（沿Y负向视角查看的背面），散热片贴在外侧，阵列沿X方向
+fin_cy = half_side + 散热片深度 / 2.0
+for i in range(散热片数量):
+    fin_cx = start_pos + i * 散热片间距
+    散热片列表.append(创建散热片(散热片截面_Y面, fin_cx, fin_cy))
+
+# 面C：X正向面（沿X负向视角查看的正面 = 左视图面），散热片贴在外侧，阵列沿Y方向
+fin_cx = half_side + 散热片深度 / 2.0
+for i in range(散热片数量):
+    fin_cy = start_pos + i * 散热片间距
+    散热片列表.append(创建散热片(散热片截面_X面, fin_cx, fin_cy))
+
+# 合并所有散热片
+散热片阵列 = combine(*散热片列表)
+```
+
+> 参考：[水泵.py](file:///D:/BIMbase/PythonScript/BFAComponentLib/task/830建模/水泵/水泵.py)
