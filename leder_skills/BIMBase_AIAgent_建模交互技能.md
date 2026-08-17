@@ -65,7 +65,7 @@ description: AI Agent 与用户进行 BIMBase pyp3d 建模交互时的行为规�
 | **下拉选取** | `obvious=True, combo=[...]` | 只能从预设选项中选择 |
 | **仅显示不可修改** | `obvious=True, readonly=True` | 可见但置灰不可调（`readonly` 仅控制可调性，默认 `False`） |
 | **不可见内部参数** | `obvious=False`（或不设置） | 不在面板显示 |
-| **最终模型输出** | `show=True, value=None` | 几何体输出槽位，可见但不可调 |
+| **最终模型输出** | `show=True, value=None` | 几何体输出槽位，可见但不可调。**关键规则：每个组件只保留一个最终的组装槽位（`show=True`），不要为每个部件单独设置 `show=True` 槽位，多个 show 槽位会导致组装时的布尔运算失败。** |
 
 **示例输入：**
 > 参数"长"=1000mm，下拉可选 [500, 1000, 2000]；参数"宽"=300mm，可填写；参数"旋转角度"=45°，仅显示
@@ -216,7 +216,7 @@ class 模型名称(Component):
         self['参数2'] = Attr(默认值, obvious=True, combo=[选项列表])
         # 只读显示参数
         self['参数3'] = Attr(默认值, obvious=True, readonly=True)
-        # 最终模型输出槽位
+        # 最终模型输出槽位（关键规则：只保留一个最终组装槽位，不要为每个部件单独设置 show=True）
         self['结果'] = Attr(None, show=True)
 
         # ========== 特征点定义（可选）==========
@@ -274,7 +274,7 @@ if __name__ == "__main__":
 - [ ] 顶部有 `from pyp3d import *`
 - [ ] 文件中只有一个 `Component` 子类
 - [ ] `replace()` 带 `@export` 装饰器，`__init__` 末尾调用 `self.replace()`
-- [ ] 最终几何赋值给 `Attr(None, show=True)` 槽位
+- [ ] 最终几何赋值给唯一的 `Attr(None, show=True)` 槽位（每个组件只保留一个最终组装槽位，多个 show 槽位会导致布尔运算失败）
 - [ ] 参数经 `self['名']` 读取，未写死数值
 - [ ] Vec2/Vec3 未混用；`Section` 未传入 Vec3
 - [ ] `Loft` 截面方向/开闭/分段一致且空间分离（不共面）

@@ -100,7 +100,7 @@ if __name__ == "__main__":
   - `obvious` 属性的可见性：`True` 时可见，`False` 时不可见。默认为 `False`。
   - `readonly` 属性的只读性：`True` 时不可调，为置灰状态，`False` 时可调。默认为 `False`。
   - `combo` 下拉选项列表，元素类型须与 value 一致且含默认值；控制标签全小写。
-  - `show=True` 最终几何体输出槽位，默认值填 `None`。
+  - `show=True` 最终几何体输出槽位，默认值填 `None`。**关键规则：每个组件只保留一个最终的组装槽位（`show=True`），不要为每个部件单独设置 `show=True` 槽位，多个 show 槽位会导致组装时的布尔运算失败。**
 - `__init__` 末尾调用 `self.replace()`；造型逻辑写在 `@export` 的 `replace(self)` 中（否则参数变化不重算）。
 - 入口 `place(实例)` 才能在视图中显示结果。
 

@@ -143,7 +143,7 @@ class pythonModel(Component):
         self['长'] = Attr(1000, obvious=True, combo=[500,1000,2000,3000,4000])
         self['宽'] = Attr(300.0, obvious=True)
         self['高'] = Attr(500, obvious=True)
-        self['长方体'] = Attr(None, show=True)   # 输出槽位
+        self['长方体'] = Attr(None, show=True)   # 最终组装输出槽位（只保留一个）
         self.replace()
 
     @export
@@ -166,7 +166,7 @@ if __name__ == "__main__":
 - `obvious` 属性的可见性：`True` 时可见，`False` 时不可见。默认为 `False`。
 - `readonly` 属性的只读性：`True` 时不可调，为置灰状态，`False` 时可调。默认为 `False`。
 - `combo=[...]`：下拉选项（元素类型须与 value 一致，且必须包含默认值）
-- `show=True`：最终几何体输出槽位（默认值填 `None`）
+- `show=True`：最终几何体输出槽位（默认值填 `None`）。**关键规则：每个组件只保留一个最终的组装槽位（`show=True`），不要为每个部件单独设置 `show=True` 槽位，多个 show 槽位会导致组装时的布尔运算失败。**
 - 控制标签必须**全小写**
 
 ### 4.3 高频约束
