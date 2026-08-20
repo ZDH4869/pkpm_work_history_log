@@ -308,54 +308,136 @@ Skills 是 AI Agent 的提示词扩展，通过 markdown 文件导入，对 Agen
 
 ---
 
-## 五、Skills & Markdown 备份路径与同步规则
+## 五、Skills & Markdown 完整文件路径清单（更新时必查）
 
-### 5.1 完整更新路径清单
+> **当用户要求对"所有相关的 BIMBase 建模的 skills、markdown 进行内容更新"时，Agent 必须按以下编号路径逐一更新对应文件。**
 
-**当用户要求更新 Skills、Markdown 或 MCP 内容时，Agent 必须同时更新以下所有路径（及其子文件夹中的对应内容）：**
+> 完整汇总文件见：`d:\BIMbase\PythonScript\BFAComponentLib\skills+markdown汇总.md`
 
-| 序号 | 更新路径 | 说明 |
-|------|---------|------|
-| 1 | `E:\个人笔记文件备份\notebook\实习\备份skills+mcp+markdown\markdown\` | 备份 Markdown 目录及其子文件夹 |
-| 2 | `E:\个人笔记文件备份\notebook\实习\备份skills+mcp+markdown\skills\` | 备份 Skills 目录及其子文件夹 |
-| 3 | `D:\BIMbase\PythonScript\BFAComponentLib\.trae\skills\` | 本地 Trae Skills 目录及其子文件夹 |
-| 4 | `D:\BIMbase\PythonScript\BFAComponentLib\leder_skills\` | 本地 leder_skills 目录及其子文件夹 |
-| 5 | `D:\BIMbase\PythonScript\BFAComponentLib\BIMBase_AIAgent_建模指南.md` | 本地 AI Agent 建模指南 |
-| 6 | `D:\BIMbase\PythonScript\BFAComponentLib\SKILL.md` | 本地 pyp3d 建模技能主文件 |
-| 7 | `E:\个人笔记文件备份\notebook\实习\目前skills+mcp+md.md` | 笔记目录下的当前 skills/mcp/md 汇总文件 |
+### 5.1 Skills 技能文件（6 个，.trae/skills/）
 
-### 5.2 备份文件与本地文件的对应关系
+| 编号 | 文件路径 |
+|------|---------|
+| S1 | `d:\BIMbase\PythonScript\BFAComponentLib\.trae\skills\bimbase-pyp3d-modeling\SKILL.md` |
+| S2 | `d:\BIMbase\PythonScript\BFAComponentLib\.trae\skills\bimbase-pyp3d-function-reference\SKILL.md` |
+| S3 | `d:\BIMbase\PythonScript\BFAComponentLib\.trae\skills\bimbase-agent-geometry-rules\SKILL.md` |
+| S4 | `d:\BIMbase\PythonScript\BFAComponentLib\.trae\skills\bimbase-modeling-agent-interaction\SKILL.md` |
+| S5 | `d:\BIMbase\PythonScript\BFAComponentLib\.trae\skills\bimbase-precise-modeling-interaction\SKILL.md` |
+| S6 | `d:\BIMbase\PythonScript\BFAComponentLib\.trae\skills\bimbase-skills-mcp-overview\SKILL.md` |
+
+### 5.2 MCP 知识库文件（24 个，BIMBaseMCP/skill/）
+
+| 编号 | 文件路径 |
+|------|---------|
+| M1 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\summary_skill.md` |
+| M2 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\geometric_interface\property_Attr.md` |
+| M3 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\geometric_interface\geometry_Cube.md` |
+| M4 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\geometric_interface\geometry_Sphere.md` |
+| M5 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\geometric_interface\geometry_Cone.md` |
+| M6 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\geometric_interface\geometry_Box.md` |
+| M7 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\geometric_interface\geometry_Arc.md` |
+| M8 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\geometric_interface\geometry_Line.md` |
+| M9 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\geometric_interface\geometry_Text.md` |
+| M10 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\geometric_interface\geometry_Section.md` |
+| M11 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\geometric_interface\geometry_Loft.md` |
+| M12 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\geometric_interface\geometry_Sweep.md` |
+| M13 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\geometric_interface\geometry_Combine.md` |
+| M14 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\geometric_interface\geometry_Bool.md` |
+| M15 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\geometric_interface\geometry_Linspace.md` |
+| M16 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\geometric_interface\geometry_Color.md` |
+| M17 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\matrix_interface.md` |
+| M18 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\place_interface.md` |
+| M19 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\01_sdk_interface_guide\drive_point_interface.md` |
+| M20 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\02_coding_standards_safety\basic_writing_style.md` |
+| M21 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\03_professional_patterns\assembly_guide.md` |
+| M22 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\04_custom_components\custom_Ellipsoid.md` |
+| M23 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\04_custom_components\custom_CircularTorus.md` |
+| M24 | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\04_custom_components\custom_SquareTorus.md` |
+
+### 5.3 本地副本 MCP 文件（24 个，BIMBaseAPImcp/skill/）
+
+与 M1-M24 结构完全一致，根目录为 `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\`。更新 MCP 文件时需同时更新此目录下的对应文件。
+
+| 编号 | 文件路径 |
+|------|---------|
+| A1 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\summary_skill.md` |
+| A2 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\geometric_interface\property_Attr.md` |
+| A3 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\geometric_interface\geometry_Cube.md` |
+| A4 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\geometric_interface\geometry_Sphere.md` |
+| A5 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\geometric_interface\geometry_Cone.md` |
+| A6 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\geometric_interface\geometry_Box.md` |
+| A7 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\geometric_interface\geometry_Arc.md` |
+| A8 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\geometric_interface\geometry_Line.md` |
+| A9 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\geometric_interface\geometry_Text.md` |
+| A10 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\geometric_interface\geometry_Section.md` |
+| A11 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\geometric_interface\geometry_Loft.md` |
+| A12 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\geometric_interface\geometry_Sweep.md` |
+| A13 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\geometric_interface\geometry_Combine.md` |
+| A14 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\geometric_interface\geometry_Bool.md` |
+| A15 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\geometric_interface\geometry_Linspace.md` |
+| A16 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\geometric_interface\geometry_Color.md` |
+| A17 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\matrix_interface.md` |
+| A18 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\place_interface.md` |
+| A19 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\01_sdk_interface_guide\drive_point_interface.md` |
+| A20 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\02_coding_standards_safety\basic_writing_style.md` |
+| A21 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\03_professional_patterns\assembly_guide.md` |
+| A22 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\04_custom_components\custom_Ellipsoid.md` |
+| A23 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\04_custom_components\custom_CircularTorus.md` |
+| A24 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBaseAPImcp\skill\04_custom_components\custom_SquareTorus.md` |
+
+### 5.4 本地知识库文档（5 个，leder_skills/）
+
+| 编号 | 文件路径 |
+|------|---------|
+| L1 | `d:\BIMbase\PythonScript\BFAComponentLib\leder_skills\BIMBase_Agent几何理解与验证规则.md` |
+| L2 | `d:\BIMbase\PythonScript\BFAComponentLib\leder_skills\BIMBase_AIAgent_建模交互技能.md` |
+| L3 | `d:\BIMbase\PythonScript\BFAComponentLib\leder_skills\BIMBase_几何建模精确交互规范.md` |
+| L4 | `d:\BIMbase\PythonScript\BFAComponentLib\leder_skills\BIMBase_pyp3d_建模方法函数大全.md` |
+| L5 | `d:\BIMbase\PythonScript\BFAComponentLib\leder_skills\BIMBase_Skills_MCP_配置总览.md` |
+
+### 5.5 根目录知识库文档（2 个）
+
+| 编号 | 文件路径 |
+|------|---------|
+| R1 | `d:\BIMbase\PythonScript\BFAComponentLib\SKILL.md` |
+| R2 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBase_AIAgent_建模指南.md` |
+
+### 5.6 备份路径
+
+| 编号 | 路径 | 说明 |
+|------|------|------|
+| B1 | `E:\个人笔记文件备份\notebook\实习\备份skills+mcp+markdown\skills\` | 备份 Skills 目录 |
+| B2 | `E:\个人笔记文件备份\notebook\实习\备份skills+mcp+markdown\markdown\` | 备份 Markdown 目录 |
+| B3 | `E:\个人笔记文件备份\notebook\实习\目前skills+mcp+md.md` | 当前 skills/mcp/md 汇总文件 |
+
+### 5.7 同步更新规则（必须遵守）
+
+**当用户要求更新 Skills、Markdown 或 MCP 内容时，Agent 必须按以下顺序同步更新：**
+
+1. 更新 `.trae\skills\` 下的 6 个 Skill 文件（编号 S1-S6）
+2. 更新 `BIMBaseMCP\skill\` 下的对应文件（编号 M1-M24）
+3. 更新 `BIMBaseAPImcp\skill\` 下的对应文件（编号 A1-A24）
+4. 更新 `leder_skills\` 下的对应文件（编号 L1-L5）
+5. 更新根目录 `SKILL.md` 和 `BIMBase_AIAgent_建模指南.md`（编号 R1-R2）
+6. 更新备份 `skills\` 和 `markdown\` 目录（编号 B1-B2）
+7. 更新 `目前skills+mcp+md.md`（编号 B3）
+8. 更新 `skills+markdown汇总.md`（如有路径变更）
+
+### 5.8 备份文件与本地文件的对应关系
 
 | 备份文件 | 本地 Skill 文件 |
 |---------|---------------|
-| `skills\BIMBase_Agent几何理解与验证规则.md` | `.trae\skills\bimbase-agent-geometry-rules\SKILL.md` |
-| `skills\SKILL.md` | `.trae\skills\bimbase-pyp3d-modeling\SKILL.md` |
-| `skills\BIMBase_AIAgent_建模交互技能.md` | `.trae\skills\bimbase-modeling-agent-interaction\SKILL.md` |
-| `skills\BIMBase_几何建模精确交互规范.md` | `.trae\skills\bimbase-precise-modeling-interaction\SKILL.md` |
-| `skills\BIMBase_pyp3d_建模方法函数大全.md` | `.trae\skills\bimbase-pyp3d-function-reference\SKILL.md` |
-| `skills\BIMBase_Skills_MCP_配置总览.md` | `.trae\skills\bimbase-skills-mcp-overview\SKILL.md` |
+| `skills\BIMBase_Agent几何理解与验证规则.md` | `.trae\skills\bimbase-agent-geometry-rules\SKILL.md` (S3) |
+| `skills\SKILL.md` | `.trae\skills\bimbase-pyp3d-modeling\SKILL.md` (S1) |
+| `skills\BIMBase_AIAgent_建模交互技能.md` | `.trae\skills\bimbase-modeling-agent-interaction\SKILL.md` (S4) |
+| `skills\BIMBase_几何建模精确交互规范.md` | `.trae\skills\bimbase-precise-modeling-interaction\SKILL.md` (S5) |
+| `skills\BIMBase_pyp3d_建模方法函数大全.md` | `.trae\skills\bimbase-pyp3d-function-reference\SKILL.md` (S2) |
+| `skills\BIMBase_Skills_MCP_配置总览.md` | `.trae\skills\bimbase-skills-mcp-overview\SKILL.md` (S6) |
 | `markdown\BIMBase_Agent几何理解与验证规则.md` | 同上 |
 | `markdown\BIMBase_几何建模精确交互规范.md` | 同上 |
 | `markdown\BIMBase_Skills_MCP_配置总览.md` | 同上 |
 | `markdown\BIMBase_pyp3d_建模方法函数大全.md` | 同上 |
-| `markdown\BIMBase_AIAgent_建模指南.md` | 无对应 Skill（纯本地文档） |
-
-### 5.3 同步更新规则（必须遵守）
-
-**当用户要求更新 Skills、Markdown 或 MCP 内容时，Agent 必须同时更新以下所有路径下的对应文件：**
-
-1. **本地 Skill 路径**：`d:\BIMbase\PythonScript\BFAComponentLib\.trae\skills\`
-2. **备份 Skills 路径**：`E:\个人笔记文件备份\notebook\实习\备份skills+mcp+markdown\skills\`
-3. **备份 Markdown 路径**：`E:\个人笔记文件备份\notebook\实习\备份skills+mcp+markdown\markdown\`
-
-**同步流程：**
-1. 先更新本地 `.trae\skills\` 下的文件
-2. 再更新本地 `leder_skills\` 下的对应文件
-3. 更新本地 `SKILL.md` 和 `BIMBase_AIAgent_建模指南.md`
-4. 更新备份 `skills\` 下的对应文件
-5. 更新备份 `markdown\` 下的对应文件
-6. 更新 `E:\个人笔记文件备份\notebook\实习\目前skills+mcp+md.md`
-7. 确保所有路径下的文件内容保持一致
+| `markdown\BIMBase_AIAgent_建模指南.md` | 无对应 Skill（纯本地文档 R2） |
 
 ---
 

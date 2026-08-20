@@ -283,6 +283,53 @@ if __name__ == "__main__":
     place(椭球体())
 ```
 
+### 半椭球体（底面椭圆/圆截面，高度拉伸）
+
+通过 Loft 逐层截面放样实现。t ∈ [0, 1] 仅覆盖上半部分，底面（t=0）为完整椭圆截面，顶点（t=1）缩为一点。
+
+```python
+from pyp3d import *
+import math
+
+class 半椭球体(Component):
+    def __init__(self):
+        Component.__init__(self)
+        self["半长轴"] = Attr(1000.0, obvious=True)
+        self["半短轴"] = Attr(700.0, obvious=True)
+        self["椭球高度"] = Attr(500.0, obvious=True)
+        self["半椭球体"] = Attr(None, show=True)
+        self.replace()
+
+    @export
+    def replace(self):
+        ax = max(float(self["半长轴"]), 1e-3)
+        by = max(float(self["半短轴"]), 1e-3)
+        cz = max(float(self["椭球高度"]), 1e-3)
+        n = 25
+        if n % 2 == 0:
+            n += 1
+        sections = []
+        eps = 1e-3
+        for i in range(n):
+            t = 1.0 * i / (n - 1)                # t ∈ [0, 1]，底面→顶点
+            z_local = cz * t
+            scale_xy = math.sqrt(max(0.0, 1.0 - t * t))
+            rx = max(ax * scale_xy, eps)
+            ry = max(by * scale_xy, eps)
+            sections.append(
+                translate(0, 0, z_local) * scale(rx, ry) * Section(Arc(2 * math.pi))
+            )
+        half_ellipsoid = Loft(*sections)
+        half_ellipsoid.smooth = True
+        self["半椭球体"] = half_ellipsoid
+
+if __name__ == "__main__":
+    place(半椭球体())
+```
+
+> **关键差异**：半椭球体 t ∈ [0,1]（完整椭球体 t ∈ [-1,1]），底面在 XOY 面为完整椭圆截面。当 `半长轴 = 半短轴` 时退化为圆截面半椭球。
+> 参考：[椭底面高度拉伸.py](file:///D:/BIMbase/PythonScript/BFAComponentLib/task/830建模/椭底面高度拉伸.py)
+
 ### 圆形截面圆环（Sweep 沿圆形路径扫掠圆形截面）
 ```python
 from pyp3d import *
