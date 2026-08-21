@@ -5,6 +5,10 @@ description: AI Agent 进行 BIMBase pyp3d 建模时的几何理解与验证规�
 
 # BIMBase Agent 几何理解与验证规则
 
+> **冲突优先级规则（最高优先级，必须遵守）**
+> 1. **建模技术要求**：本地 skills/markdown 内容若与 `BIMBaseAI2PY_MCPServer` 获取到的建模技术要求（函数签名、参数语义、几何定位语义、编码规范等）发生冲突或解释不同，**以 `BIMBaseAI2PY_MCPServer` 为第一执行准则**。
+> 2. **个人建模喜好**：涉及个人建模喜好（建模定位提示词喜好、特殊模型部件调用，如散热片、半椭球体等）时，**以本地 skills/markdown 为第一执行准则**。
+
 > 面向 AI Agent：规定建模推理规则、强制验证流程、常见错误预防，确保精确建模。
 > 编制日期：2026-07-15
 
@@ -19,9 +23,9 @@ description: AI Agent 进行 BIMBase pyp3d 建模时的几何理解与验证规�
 ```
 1. 调用 Skill: bimbase-pyp3d-modeling        → 加载 SKILL.md（API 签名、标准结构、变换规则）
 2. 调用 Skill: bimbase-modeling-agent-interaction → 加载交互规范（信息收集、提问模板）
-3. 调用 MCP: get_summary_document()           → 首次建模必调，了解全部可用 SDK
-4. 调用 MCP: get_skill_manifest()             → 获取结构化 symbol 索引
-5. 调用 MCP: get_skill_bundle(["所需API"])     → 批量获取 API 文档（自动附带编码规范）
+3. 调用 BIMBaseAI2PY_MCPServer: get_summary_document() → 首次建模必调，了解全部可用 SDK
+4. 调用 BIMBaseAI2PY_MCPServer: get_skill_manifest()   → 获取结构化 symbol 索引
+5. 调用 BIMBaseAI2PY_MCPServer: get_skill_bundle(["所需API"]) → 批量获取 API 文档（自动附带编码规范）
 6. 读取: BIMBase_AIAgent_建模指南.md           → 完整技术参考
 7. 读取: BIMBase_pyp3d_建模方法函数大全.md      → 函数详细用法
 8. 读取: BIMBase_几何建模精确交互规范.md        → 用户交互规范
@@ -63,29 +67,16 @@ description: AI Agent 进行 BIMBase pyp3d 建模时的几何理解与验证规�
 
 ### 2.1 Box —— 四棱台/长方体
 
-```python
-Box(baseOrigin, topOrigin, vectorX, vectorY, baseX, baseY, topX, topY)
-```
+> ⚠️ **Box 无本地 `.py` 参考，函数签名与定位语义必须以 `BIMBaseAI2PY_MCPServer` 官方 SDK 文档为准。** 使用前必须调用 `get_skill_doc("Box")`。
 
-| 规则 | 说明 |
-|------|------|
-| 截面定位 | **截面以 baseOrigin 为形心**，向 ±vectorX 各扩展 baseX/2，向 ±vectorY 各扩展 baseY/2 |
-| 内外箱体 | 形心必须重合 → baseOrigin 的 YZ 坐标完全相同 |
-| 内箱体尺寸 | baseX_inner = baseX_outer - 2×T, baseY_inner = baseY_outer - 2×T |
-| 拉伸方向 | baseOrigin → topOrigin 方向 |
+**官方已确认的核心语义（以 MCP 查询结果为准）：**
+- `baseOrigin` / `topOrigin` 是底面/顶面的**角点**（非截面中心），实体沿 `+vectorX`/`+vectorY` 正方向铺开。
+- 上下截面锚定同一个角：顶底尺寸不同时缩向锚定角（单边收分），**非居中收分**。
 
-**错误示例（曾导致储水箱只生成部分板件）：**
-```python
-# ❌ 内箱体 baseOrigin 的 Z 坐标多加了 T，导致内外箱体不重合
-inner_box = Box(Vec3(-box_half, cy, cz + T), Vec3(...), ...)
-```
-
-**正确做法：**
-```python
-# ✅ 内外箱体 baseOrigin 的 YZ 坐标完全相同
-outer_box = Box(Vec3(-L/2, cy, cz), Vec3(L/2, cy, cz), ...)
-inner_box = Box(Vec3(-(L-2T)/2, cy, cz), Vec3((L-2T)/2, cy, cz), ...)
-```
+**空心箱体（内外箱体形心重合）推荐改用 `Section + Loft`**（形心定位，见函数大全 4.2 节）：
+- 内外箱体截面均以**形心在原点**定义（`translate(-L/2, -W/2, 0) * Section(...)`），内外形心天然重合，无需计算角点偏移。
+- 内箱体尺寸：`baseX_inner = baseX_outer - 2×T`、`baseY_inner = baseY_outer - 2×T`。
+- 布尔减：`外箱体 Loft - 内箱体 Loft`。
 
 ### 2.2 Cone —— 圆柱/圆台
 

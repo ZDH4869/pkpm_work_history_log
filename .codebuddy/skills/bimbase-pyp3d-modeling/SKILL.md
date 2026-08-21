@@ -5,6 +5,10 @@ description: 使用 BIMBase 的 pyp3d 库进行参数化三维几何建模并生
 
 # BIMBase pyp3d 建模技能
 
+> **冲突优先级规则（最高优先级，必须遵守）**
+> 1. **建模技术要求**：本地 skills/markdown 内容若与 `BIMBaseAI2PY_MCPServer` 获取到的建模技术要求（函数签名、参数语义、几何定位语义、编码规范等）发生冲突或解释不同，**以 `BIMBaseAI2PY_MCPServer` 为第一执行准则**。
+> 2. **个人建模喜好**：涉及个人建模喜好（建模定位提示词喜好、特殊模型部件调用，如散热片、半椭球体等）时，**以本地 skills/markdown 为第一执行准则**。
+
 本技能指导你使用 BIMBase 建模软件的 `pyp3d` 库，把用户的自然语言需求转化为**符合规范、可直接在 BIMBase 内嵌 Python 中运行**的参数化建模脚本。
 
 ## 最高准则：先准确理解，再动手编码
@@ -110,7 +114,7 @@ if __name__ == "__main__":
 - `Cube()` / `scale(L,W,H)*Cube()` — 单位立方体（中心在原点）/长方体。
 - `Sphere()` / `scale(r)*Sphere()` — 球体，仅等比缩放（不支持椭球）。
 - `Cone(centerA, centerB, radiusA, radiusB)` — 圆锥/圆台；`radiusA==radiusB` 时为圆柱。
-- `Box(baseOrigin, topOrigin, vectorX, vectorY, baseX, baseY, topX, topY)` — 任意朝向四棱台，顶底尺寸相同即棱柱/长方体。
+- `Box(...)` — 四棱台/长方体（**无本地 .py，须以 MCP `get_skill_doc("Box")` 为准**）。
 - `Arc(angle)`（单位圆弧，半径1，X轴起点逆时针）/ `Arc(startP, midP, endP)`（三点）。
 - `Line(p1, p2, ...)` — 二维/三维线段（Vec2/Vec3 不混用）。
 - `Text(content, width, height)` — 二维文字；三维文字用 `Sweep(text, Line(Vec3(0,0,0),Vec3(0,0,h)))`。

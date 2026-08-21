@@ -1,12 +1,16 @@
 # BIMBase AI Agent Python 编程建模指南
 
-> 本文档基于对 `tyafc` 项目（BIMBase AI 智能助手）的源码解析整理而成，目标是帮助你使用 AI Agent + MCP 完成 BIMBase 的 `pyp3d` 参数化建模。
+> **冲突优先级规则（最高优先级，必须遵守）**
+> 1. **建模技术要求**：本地 skills/markdown 内容若与 `BIMBaseAI2PY_MCPServer` 获取到的建模技术要求（函数签名、参数语义、几何定位语义、编码规范等）发生冲突或解释不同，**以 `BIMBaseAI2PY_MCPServer` 为第一执行准则**。
+> 2. **个人建模喜好**：涉及个人建模喜好（建模定位提示词喜好、特殊模型部件调用，如散热片、半椭球体等）时，**以本地 skills/markdown 为第一执行准则**。
+
+> 本文档基于对 BIMBase AI 智能助手的源码解析整理而成，目标是帮助你使用 AI Agent + MCP 完成 BIMBase 的 `pyp3d` 参数化建模。
 
 ---
 
 ## 一、项目作用与功能总览
 
-`tyafc` 是一个面向 **BIMBase 建模软件** 的 AI 智能编程助手，核心目标是：**用户用自然语言描述几何构件 → AI Agent 检索 SDK 知识库 → 生成符合规范的 `pyp3d` Python 脚本 → 在 BIMBase 内嵌 Python 中执行 → 自动布置到视图**。
+BIMBase AI 智能助手是一个面向 **BIMBase 建模软件** 的 AI 智能编程助手，核心目标是：**用户用自然语言描述几何构件 → AI Agent 检索 SDK 知识库 → 生成符合规范的 `pyp3d` Python 脚本 → 在 BIMBase 内嵌 Python 中执行 → 自动布置到视图**。
 
 ### 1.1 技术栈
 
@@ -17,7 +21,7 @@
 | AI 框架 | LangChain / LangGraph | Agent、工具调用、流式输出 |
 | LLM | MiniMax / DeepSeek / 本地 Qwen | 多模型可切换 |
 | 数据库 | MySQL 8.0 | 用户、会话、消息持久化 |
-| 知识检索 | **MCP Server (FastMCP)** | BIMBase SDK 知识库的结构化检索 |
+| 知识检索 | **BIMBaseAI2PY_MCPServer（远程 MCP）** | BIMBase SDK 知识库的结构化检索 |
 | 知识库 | Markdown + YAML frontmatter | 按能力分级组织的 SDK 文档 |
 
 ### 1.2 数据流
@@ -26,7 +30,7 @@
 用户自然语言输入
     → Qt 前端 (chat_app.py) 发送 HTTP/SSE
     → Flask 后端 LangGraph Agent
-    → 通过 MCP / skill_doc 工具检索知识库
+    → 通过 BIMBaseAI2PY_MCPServer 工具检索知识库
     → 调用 LLM 生成 pyp3d 代码
     → 前端提取 ```python 代码块，保存到 generated_scripts/
     → 调用 BIMBase 内嵌 Python (python-3.7.9-embed-amd64) 执行
@@ -35,8 +39,8 @@
 
 ### 1.3 目录关键点
 
-- `BIMBaseMCP/mcpServer/` — **MCP 服务器**（本文档重点），提供知识库检索工具链。
-- `BIMBaseMCP/skill/` — **SDK 知识库**，按 P0~P3 能力分级组织的 Markdown 文档。
+- `BIMBaseAI2PY_MCPServer` — **远程 MCP 服务器**（本文档重点），提供知识库检索工具链。
+- SDK 知识库 — 由 `BIMBaseAI2PY_MCPServer` 远程提供，按能力分级组织的官方 Markdown 文档。
 - `backend/agent/` — LangGraph Agent（prompts、tools、core、config）。
 - `frontend/` — PySide6 客户端，负责代码提取与 BIMBase 内嵌 Python 执行。
 
@@ -46,29 +50,27 @@
 
 MCP（Model Context Protocol）服务器是让 AI Agent **稳定、可控地检索 BIMBase SDK 文档** 的关键组件。它避免了 Agent 凭记忆瞎猜 `pyp3d` 函数名/参数的问题。
 
-### 2.1 启动方式
+### 2.1 配置方式
 
-MCP 服务器基于 `fastmcp`，要求 **Python >= 3.10**（BIMBase 内嵌的 3.7.9 不兼容，需用独立 Python，如 Miniconda）。
+`BIMBaseAI2PY_MCPServer` 为**远程 MCP 服务**，无需本地 Python 环境或启动脚本，直接通过项目 `mcp.json` 配置接入：
 
-`BIMBaseMCP/mcpServer/start_mcp_server.bat`：
-```bat
-@echo off
-REM fastmcp 要求 Python >= 3.10
-"D:\Miniconda\python.exe" "...\BIMBaseMCP\mcpServer\MCPServer.py"
+```json
+{
+  "mcpServers": {
+    "BIMBaseAI2PY_MCPServer": {
+      "url": "https://dev.pkpm.cn/mcp/"
+    }
+  }
+}
 ```
 
-服务器以 HTTP 传输方式启动在 `0.0.0.0:8888`：
-```python
-mcp.run(transport="http", host="0.0.0.0", port=8888)
-```
-
-MCP 客户端配置示例（`.mcp.json` 风格；本项目内 codegraph 用的是 stdio，BIMBase 建模服务器则是 HTTP/SSE，接入时按客户端支持的方式配置到 `http://<host>:8888`）。
+服务地址：`https://dev.pkpm.cn/mcp/`（HTTP/SSE）。
 
 ### 2.2 MCP 提供的工具（Tools）
 
 | 工具 | 参数 | 作用 |
 |------|------|------|
-| `get_summary_document()` | 无 | **首次建模必调**。返回知识库概要（`summary_skill.md`），了解全部可用 SDK 与文档路径。 |
+| `get_summary_document()` | 无 | **首次建模必调**。返回知识库概要，了解全部可用 SDK 与文档路径。 |
 | `get_skill_manifest(include_reference=False, force_refresh=False, agent_input="")` | 见下 | 返回**结构化 JSON 索引**：所有 symbol、路径、分类、别名、关键词、依赖、优先级。用于稳定检索、避免猜函数名。 |
 | `get_skill_doc(symbol, include_reference=False, agent_input="")` | symbol 如 `Cube`/`Sweep`/`Bool`/`matrix_interface` | 按标准 symbol 获取**单个**文档正文（返回 `{symbol, path, content}`）。 |
 | `get_skill_bundle(symbols, include_reference=False, include_dependencies=True, agent_input="")` | symbols 为列表 | **批量**获取多个文档正文，减少多次调用；`include_dependencies=True` 时自动附带 `must_load_with` 依赖（如 `basic_writing_style`）。 |
@@ -76,18 +78,13 @@ MCP 客户端配置示例（`.mcp.json` 风格；本项目内 codegraph 用的�
 
 > `agent_input` 参数用于把 Agent 的原始意图/上下文摘要传给监控层（`monitoring.py`），便于调试与评测，可选。
 
-### 2.3 MCP 提供的 Prompt
+### 2.3 检索机制内部原理
 
-`bimbase_modeling_guide()` — 一个可附加的 System Prompt，指导 Agent 的建模工作流（详见第三节）。客户端在处理建模需求时应把它注入到对话上下文。
+`BIMBaseAI2PY_MCPServer` 内部基于官方 SDK 知识库提供结构化检索：
 
-### 2.4 检索机制内部原理（`MCPServer.py`）
-
-- **扫描**：`_scan_skill_docs()` 递归扫描 `skill/**/*.md`，解析 YAML frontmatter，推断 symbol 与分类（geometry/interface/safety/pattern/custom_component）。
-- **覆盖增强**：`skill_manifest_overrides.json` 为每个 symbol 补充 `aliases`（中英文别名）、`keywords`、`related`、`priority`，大幅提升模糊匹配命中率。例如 `Cube` 别名含 `立方体/长方体/方盒`。
-- **归一化匹配**：`_normalize_text()` 做大小写、全半角、标点、空白归一化并保留 CJK，使中文/英文/别名都能匹配到同一文档。
-- **强制依赖注入**：所有 `geometry/interface/pattern` 类文档自动附带 `basic_writing_style`（编码规范），确保生成代码始终符合规范。
-- **安全沙箱**：`_safe_resolve_skill_path()` 禁止路径穿越与符号链接逃逸，只能访问 `SKILL_ROOT` 内文档。
-- **缓存**：manifest 结果缓存，`force_refresh=True` 可强制刷新。
+- **结构化索引**：`get_skill_manifest()` 返回所有 symbol 的路径、分类、别名、关键词、依赖，避免凭记忆猜函数名（如 `Cube` 别名含 `立方体/长方体/方盒`）。
+- **强制依赖注入**：所有几何/接口/模式类文档自动附带 `basic_writing_style`（编码规范），确保生成代码始终符合规范。
+- **批量获取**：`get_skill_bundle()` 一次性取回多个 symbol 文档并自动附带编码规范。
 
 ### 2.5 Agent 使用 MCP 的推荐调用序列
 
@@ -104,7 +101,7 @@ MCP 客户端配置示例（`.mcp.json` 风格；本项目内 codegraph 用的�
 
 ## 三、AI Agent 建模标准工作流（Prompt 约定）
 
-来自 `MCPServer.py::bimbase_modeling_guide()` 与 `backend/agent/prompts.py`。
+来自 `BIMBaseAI2PY_MCPServer` 的建模工作流约定。
 
 ### 3.1 检索与规划
 - **绝对不要凭记忆猜测函数名或参数**（`pyp3d` API 与常规 Python 库完全不同）。
@@ -122,14 +119,14 @@ MCP 客户端配置示例（`.mcp.json` 风格；本项目内 codegraph 用的�
 - 在 `replace` 内通过 `L = self['长']` 提取参数，不写死数值
 - `if __name__ == "__main__":` 下实例化并 `place(实例)` 显示结果
 
-### 3.4 渐进式披露（backend Agent 的 `skill_doc` 版本）
-后端另有一套基于 `skill_doc` 工具的三级检索（概览 → 列表 → 详情），与 MCP 工具功能等价，适用于未接 MCP 的场景。
+### 3.4 渐进式披露（未接 MCP 时的本地检索）
+未接 MCP 时，可退化为三级检索（概览 → 列表 → 详情），与 MCP 工具功能等价。
 
 ---
 
 ## 四、pyp3d 建模规范（必读）
 
-来源：`02_coding_standards_safety/basic_writing_style.md`
+来源：MCP symbol `basic_writing_style`（编码规范）
 
 ### 4.1 参数化组件基本结构
 
@@ -202,7 +199,7 @@ if __name__ == "__main__":
 | `Cube` | `Cube()` / `scale(L,W,H)*Cube()` | 单位立方体（中心在原点），缩放得长方体 |
 | `Sphere` | `Sphere()` / `scale(r)*Sphere()` | 球体，只能等比缩放（不支持椭球） |
 | `Cone` | `Cone(centerA, centerB, radiusA, radiusB)` | 圆锥/圆台；`radiusA==radiusB` 时为圆柱 |
-| `Box` | `Box(baseOrigin, topOrigin, vectorX, vectorY, baseX, baseY, topX, topY)` | 任意朝向四棱台，顶底尺寸相同为棱柱/长方体 |
+| `Box` | 查 MCP `get_skill_doc("Box")`（无本地 .py） | 任意朝向四棱台，顶底尺寸相同为棱柱/长方体；origin 为角点非中心 |
 | `Arc` | `Arc(angle)` / `Arc(startP, midP, endP)` | 单位圆弧（半径1，X轴起点逆时针）或三点圆弧 |
 | `Line` | `Line(p1, p2, ...)` | 二维/三维线段（Vec2/Vec3 不混用） |
 | `Text` | `Text(content, width, height)` | 二维文字；三维文字用 Sweep 沿 Z 轴线段扫掠 |
@@ -247,7 +244,7 @@ rotatecube = rotate(Vec3(0, 0, 1), pi/2) * scale(500, 200, 400) * Cube()
 
 ## 六、自定义组件库（原生 API 无法直接生成，直接复用）
 
-来源：`04_custom_components/`。遇到对应需求时**直接复制复用**。
+来源：MCP symbol `custom_Ellipsoid` / `custom_CircularTorus` / `custom_SquareTorus`。遇到对应需求时**直接复制复用**。
 
 ### 6.1 椭球体（Loft 放样实现）
 `custom_Ellipsoid` — 参数：X/Y/Z 半轴、截面数、旋转角度、XYZ 位移。通过逐层计算椭圆截面 + `Loft` 拟合。
@@ -258,13 +255,13 @@ rotatecube = rotate(Vec3(0, 0, 1), pi/2) * scale(500, 200, 400) * Cube()
 ### 6.3 方形截面圆环（Sweep 扫掠实现）
 `custom_SquareTorus` — 参数：环半径、截面边长、旋转角度、XYZ。方形截面沿圆形路径 `Sweep`。
 
-> 三个组件的完整源码见 `BIMBaseMCP/skill/04_custom_components/*.md`，或通过 MCP `get_skill_doc("custom_Ellipsoid")` 获取。
+> 三个组件的完整源码可通过 `BIMBaseAI2PY_MCPServer` 的 `get_skill_doc("custom_Ellipsoid")` 等获取。
 
 ---
 
 ## 七、多组件内联装配
 
-来源：`03_professional_patterns/assembly_guide.md`（MCP symbol：`assembly_guide`）
+来源：MCP symbol `assembly_guide`
 
 将多个独立 `.py` 组件合并为**单个总装脚本**时：
 - **禁止**跨文件类导入（`from a import A`）
@@ -283,14 +280,14 @@ AI 生成的脚本由 BIMBase **内嵌 Python** 执行（`frontend/workers/scrip
 ```
 
 - 执行超时 120 秒，捕获 stdout/stderr 回传前端。
-- **注意版本差异**：建模脚本运行在内嵌 **Python 3.7.9**；而 MCP 服务器需 **Python >= 3.10**，两者是不同解释器，不要混用。
+- **注意**：建模脚本运行在内嵌 **Python 3.7.9**；而 MCP 服务 `BIMBaseAI2PY_MCPServer` 为远程服务，无需本地 Python 环境。
 - 脚本入口须包含 `if __name__ == "__main__":` 并调用 `place(...)`，才能在 BIMBase 视图中布置结果。
 
 ---
 
 ## 九、给 AI Agent 的实操清单（TL;DR）
 
-1. **接 MCP**：将 BIMBase MCP Server 挂到 `http://<host>:8888`，Agent 具备 5 个检索工具 + 1 个建模 Prompt。
+1. **接 MCP**：使用远程 `BIMBaseAI2PY_MCPServer`（`https://dev.pkpm.cn/mcp/`），Agent 具备 5 个检索工具。
 2. **建模第一步**：`get_summary_document()` → `get_skill_manifest()`。
 3. **取文档**：`get_skill_bundle([需要的symbol])`，自动附带 `basic_writing_style` 编码规范。
 4. **生成确认表**：写代码前，先输出「建模参数确认表」（步骤、部件、API、临时坐标系原点、截面定义、拉伸方向、全局坐标范围），用户确认后再生成代码。

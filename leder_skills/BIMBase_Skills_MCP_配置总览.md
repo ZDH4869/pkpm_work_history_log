@@ -5,6 +5,10 @@ description: BIMBase Python 建模 Skills & MCP 配置总览。汇总当前环�
 
 # BIMBase Python 建模 Skills & MCP 配置总览
 
+> **冲突优先级规则（最高优先级，必须遵守）**
+> 1. **建模技术要求**：本地 skills/markdown 内容若与 `BIMBaseAI2PY_MCPServer` 获取到的建模技术要求（函数签名、参数语义、几何定位语义、编码规范等）发生冲突或解释不同，**以 `BIMBaseAI2PY_MCPServer` 为第一执行准则**。
+> 2. **个人建模喜好**：涉及个人建模喜好（建模定位提示词喜好、特殊模型部件调用，如散热片、半椭球体等）时，**以本地 skills/markdown 为第一执行准则**。
+
 > 编制日期：2026-07-15
 > 维护者：AI Agent
 
@@ -16,7 +20,7 @@ description: BIMBase Python 建模 Skills & MCP 配置总览。汇总当前环�
 
 1. [建模流程调用指南](#零建模流程调用指南什么时候调哪个)
 2. [MCP 服务](#一mcp-服务)
-   - [BIMBaseAI2PY — BIMBase pyp3d 知识检索服务](#11-bimbaseai2py--bimbase-pyp3d-知识检索服务)
+   - [BIMBaseAI2PY_MCPServer — BIMBase pyp3d 知识检索服务](#11-bimbaseai2py_mcpserver--bimbase-pyp3d-知识检索服务)
    - [Excel — Excel 读写服务](#12-excel--excel-读写服务)
 3. [Skills（技能）](#二skills技能)
    - [bimbase-pyp3d-modeling — BIMBase pyp3d 建模技能](#21-bimbase-pyp3d-modeling--bimbase-pyp3d-建模技能)
@@ -41,19 +45,19 @@ description: BIMBase Python 建模 Skills & MCP 配置总览。汇总当前环�
   │    ├─ Skill: bimbase-modeling-agent-interaction → 加载交互规范（信息收集、提问模板）
   │    ├─ Read: BIMBase_几何建模精确交互规范.md    → 用户提示词编写规范、精确描述模板
   │    ├─ Read: BIMBase_Agent几何理解与验证规则.md  → Agent 推理规则、强制验证流程
-  │    ├─ MCP: get_summary_document()             → 首次建模必调，了解全部可用 SDK
-  │    └─ MCP: get_skill_manifest()               → 获取结构化 symbol 索引
+  │    ├─ BIMBaseAI2PY_MCPServer: get_summary_document() → 首次建模必调，了解全部可用 SDK
+  │    └─ BIMBaseAI2PY_MCPServer: get_skill_manifest()   → 获取结构化 symbol 索引
   │
   ├─► 阶段B：几何体构建（第一阶段，目标 1 次对话）
-  │    ├─ MCP: get_skill_bundle([所需API])         → 批量获取 API 文档（自动带编码规范）
+  │    ├─ BIMBaseAI2PY_MCPServer: get_skill_bundle([所需API]) → 批量获取 API 文档（自动带编码规范）
   │    ├─ Read: BIMBase_pyp3d_建模方法函数大全.md   → 函数详细用法与示例
   │    ├─ Read: BIMBase_AIAgent_建模指南.md         → 完整技术参考
   │    ├─ 【输出建模参数确认表】                    → 用户确认后再生成代码
   │    └─ Write: 生成 Python 代码
   │
   ├─► 阶段C：参数化与特征点（第二阶段，目标 1 次对话）
-  │    ├─ MCP: get_skill_doc("property_Attr")      → Attr 参数规范
-  │    ├─ MCP: get_skill_doc("drive_point_interface") → 驱动点接口
+  │    ├─ BIMBaseAI2PY_MCPServer: get_skill_doc("Attr")      → Attr 参数规范
+  │    ├─ BIMBaseAI2PY_MCPServer: get_skill_doc("DrivePointInterface") → 驱动点接口
   │    ├─ Read: SKILL.md（Attr 参数规范章节）       → obvious/readonly/combo
   │    └─ Edit: 将硬编码替换为 Attr，添加驱动点
   │
@@ -74,7 +78,7 @@ description: BIMBase Python 建模 Skills & MCP 配置总览。汇总当前环�
 | **新建模型**（从零开始） | bimbase-pyp3d-modeling + bimbase-modeling-agent-interaction | get_summary_document + get_skill_manifest + get_skill_bundle | 全部 5 份知识库文档 |
 | **修改已有模型** | bimbase-pyp3d-modeling | get_skill_bundle（按需） | 几何建模精确交互规范 + Agent几何理解与验证规则 |
 | **添加新部件** | bimbase-pyp3d-modeling | get_skill_bundle([新部件所需API]) | BIMBase_pyp3d_建模方法函数大全 |
-| **调整参数/特征点** | bimbase-pyp3d-modeling | get_skill_doc("property_Attr") 或 get_skill_doc("drive_point_interface") | SKILL.md（Attr 章节） |
+| **调整参数/特征点** | bimbase-pyp3d-modeling | get_skill_doc("Attr") 或 get_skill_doc("DrivePointInterface") | SKILL.md（Attr 章节） |
 | **调试几何位置错误** | 无需额外 Skill | 无需额外 MCP | Agent几何理解与验证规则（主动复盘规则） |
 | **参考已有组件** | 无需额外 Skill | 无需额外 MCP | 参考代码示例目录 |
 
@@ -88,11 +92,11 @@ description: BIMBase Python 建模 Skills & MCP 配置总览。汇总当前环�
 | **BIMBase_Agent几何理解与验证规则.md** | Agent 侧规则 | 推理规则、建模参数确认表、主动复盘、API 构建规则 |
 | **BIMBase_AIAgent_建模指南.md** | 技术大全 | 完整技术参考、SDK 接口速查、多组件装配、执行环境 |
 | **BIMBase_pyp3d_建模方法函数大全.md** | 函数手册 | 每个 pyp3d 函数的详细用法、参数说明、代码示例 |
-| **MCP get_summary_document** | SDK 索引 | 全部可用 SDK 文档的概要 |
-| **MCP get_skill_manifest** | 结构化索引 | 所有 symbol 的路径、分类、别名、关键词、依赖 |
-| **MCP get_skill_bundle** | 批量文档 | 按需获取具体 API 文档（自动带编码规范） |
-| **MCP get_skill_doc** | 单文档 | 获取单个 API 文档 |
-| **MCP get_related_skills** | 关联查询 | 查配套函数与必载依赖 |
+| **BIMBaseAI2PY_MCPServer get_summary_document** | SDK 索引 | 全部可用 SDK 文档的概要 |
+| **BIMBaseAI2PY_MCPServer get_skill_manifest** | 结构化索引 | 所有 symbol 的路径、分类、别名、关键词、依赖 |
+| **BIMBaseAI2PY_MCPServer get_skill_bundle** | 批量文档 | 按需获取具体 API 文档（自动带编码规范） |
+| **BIMBaseAI2PY_MCPServer get_skill_doc** | 单文档 | 获取单个 API 文档 |
+| **BIMBaseAI2PY_MCPServer get_related_skills** | 关联查询 | 查配套函数与必载依赖 |
 
 ### 0.4 缓存策略
 
@@ -106,26 +110,13 @@ MCP（Model Context Protocol）服务通过工具接口为 AI Agent 提供能力
 
 ### 配置文件
 
-```
-C:\Users\张德海（Jack）\AppData\Roaming\Trae CN\User\mcp.json
-```
+项目 MCP 配置文件：`d:\BIMbase\PythonScript\BFAComponentLib\.codebuddy\mcp.json`
 
 ```json
 {
   "mcpServers": {
-    "Excel": {
-      "command": "npx",
-      "args": ["--yes", "@negokaz/excel-mcp-server"],
-      "env": {
-        "EXCEL_MCP_PAGING_CELLS_LIMIT": "4000"
-      },
-      "fromGalleryId": "byted-mcp-volcengine.excel"
-    },
-    "BIMBaseAI2PY": {
-      "command": "D:\\Miniconda\\python.exe",
-      "args": ["D:\\01\\tyafc-master\\tyafc-master\\BIMBaseMCP\\mcpServer\\MCPServer.py"],
-      "env": {},
-      "description": "BIMBase pyp3d 建模技能文档检索服务 ⚠ 需 Python>=3.10 (fastmcp 依赖)"
+    "BIMBaseAI2PY_MCPServer": {
+      "url": "https://dev.pkpm.cn/mcp/"
     }
   }
 }
@@ -133,16 +124,14 @@ C:\Users\张德海（Jack）\AppData\Roaming\Trae CN\User\mcp.json
 
 ---
 
-### 1.1 BIMBaseAI2PY — BIMBase pyp3d 知识检索服务
+### 1.1 BIMBaseAI2PY_MCPServer — BIMBase pyp3d 知识检索服务
 
 | 项目 | 内容 |
 |------|------|
-| **类型** | MCP Command 服务（stdio 传输） |
+| **类型** | 远程 MCP 服务（HTTP/SSE） |
 | **配置方式** | `mcp.json` 文件配置 |
-| **Python 解释器** | `D:\Miniconda\python.exe`（Python 3.13.12，需 >= 3.10） |
-| **服务脚本** | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\mcpServer\MCPServer.py` |
-| **知识库根目录** | `D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\` |
-| **核心依赖** | `fastmcp`（MCP 框架）、YAML frontmatter 解析 |
+| **服务地址** | `https://dev.pkpm.cn/mcp/` |
+| **权威性** | BIMBase 建模 SDK 官方技术文档，**建模技术要求以此为准** |
 
 #### 提供的工具（5 个）
 
@@ -154,40 +143,21 @@ C:\Users\张德海（Jack）\AppData\Roaming\Trae CN\User\mcp.json
 | `get_skill_bundle` | `symbols, include_reference=False, include_dependencies=True, agent_input=""` | **批量**获取多个文档正文，自动附带 `basic_writing_style` 编码规范 |
 | `get_related_skills` | `symbol, include_reference=False, agent_input=""` | 返回该 symbol 的配套函数与必载依赖 |
 
-#### 知识库结构
+#### 官方 SDK symbol 清单（通过 `get_skill_manifest()` / `get_summary_document()` 查询）
 
-```
-D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\
-├── summary_skill.md                           # 全局概要
-├── 01_sdk_interface_guide/                    # SDK 接口指南
-│   ├── geometric_interface/                   #   几何接口
-│   │   ├── property_Attr.md                   #     参数定义 Attr
-│   │   ├── geometry_Cube.md                   #     立方体
-│   │   ├── geometry_Sphere.md                 #     球体
-│   │   ├── geometry_Cone.md                   #     圆锥/圆台/圆柱
-│   │   ├── geometry_Box.md                    #     四棱台/长方体
-│   │   ├── geometry_Arc.md                    #     圆弧
-│   │   ├── geometry_Line.md                   #     线段
-│   │   ├── geometry_Text.md                   #     文字
-│   │   ├── geometry_Section.md                #     截面
-│   │   ├── geometry_Loft.md                   #     放样
-│   │   ├── geometry_Sweep.md                  #     扫掠
-│   │   ├── geometry_Combine.md                #     组合
-│   │   ├── geometry_Bool.md                   #     布尔运算
-│   │   ├── geometry_Linspace.md               #     等分点序列
-│   │   └── geometry_Color.md                  #     颜色
-│   ├── matrix_interface.md                    #   变换接口
-│   ├── place_interface.md                     #   布置接口
-│   └── drive_point_interface.md               #   驱动点接口
-├── 02_coding_standards_safety/                # 编码规范
-│   └── basic_writing_style.md                 #   基础编写规范（自动附带）
-├── 03_professional_patterns/                  # 专业模式
-│   └── assembly_guide.md                      #   多组件内联装配指南
-└── 04_custom_components/                      # 自定义组件模板
-    ├── custom_Ellipsoid.md                    #   椭球体（Loft 实现）
-    ├── custom_CircularTorus.md                #   圆形截面圆环（Sweep 实现）
-    └── custom_SquareTorus.md                  #   方形截面圆环（Sweep 实现）
-```
+| 分类 | symbol |
+|------|--------|
+| 几何体 | Cube、Sphere、Cone、Box、Arc、Line、Text、Section、Loft、Sweep、Combine、Bool、Linspace、Extrusion、ExtrusionPlus、RotationalSweep、FilletPipe |
+| 曲线/网格 | SplineCurve、ParametricEquation、Polyface |
+| 属性/颜色 | Attr、Color |
+| 变换/布置 | matrix_interface、PlaceInterface |
+| 驱动点 | DrivePointInterface |
+| 向量 | GeVec3d |
+| 编码规范 | basic_writing_style |
+| 专业模式 | assembly_guide |
+| 自定义组件 | custom_Ellipsoid、custom_CircularTorus、custom_SquareTorus |
+
+> 完整 symbol 索引以 `BIMBaseAI2PY_MCPServer` 的 `get_skill_manifest()` 返回为准。
 
 #### 推荐调用序列
 
@@ -307,50 +277,82 @@ Skills 是 AI Agent 的提示词扩展，通过 markdown 文件导入，对 Agen
 | **热水器** | `D:\BIMbase\PythonScript\BFAComponentLib\参数化组件样例\热水器\` | 太阳能集热器、基础热水器等设备模型 |
 
 ---
-## 五、Skills & Markdown 备份路径与同步规则
 
-### 5.1 完整更新路径清单
+## 五、Skills & Markdown 完整文件路径清单（更新时必查）
 
-**当用户要求更新 Skills、Markdown 或 MCP 内容时，Agent 必须同时更新以下所有路径（及其子文件夹中的对应内容）：**
+> **当用户要求对"所有相关的 BIMBase 建模的 skills、markdown 进行内容更新"时，Agent 必须按以下编号路径逐一更新对应文件。**
 
-| 序号 | 更新路径 | 说明 |
-|------|---------|------|
-| 1 | `E:\个人笔记文件备份\notebook\实习\备份skills+mcp+markdown\markdown\` | 备份 Markdown 目录及其子文件夹 |
-| 2 | `E:\个人笔记文件备份\notebook\实习\备份skills+mcp+markdown\skills\` | 备份 Skills 目录及其子文件夹 |
-| 3 | `D:\BIMbase\PythonScript\BFAComponentLib\.trae\skills\` | 本地 Trae Skills 目录及其子文件夹 |
-| 4 | `D:\BIMbase\PythonScript\BFAComponentLib\leder_skills\` | 本地 leder_skills 目录及其子文件夹 |
-| 5 | `D:\BIMbase\PythonScript\BFAComponentLib\BIMBase_AIAgent_建模指南.md` | 本地 AI Agent 建模指南 |
-| 6 | `D:\BIMbase\PythonScript\BFAComponentLib\SKILL.md` | 本地 pyp3d 建模技能主文件 |
-| 7 | `E:\个人笔记文件备份\notebook\实习\目前skills+mcp+md.md` | 笔记目录下的当前 skills/mcp/md 汇总文件 |
+> 完整汇总文件见：`d:\BIMbase\PythonScript\BFAComponentLib\skills+markdown汇总.md`
 
-### 5.2 备份文件与本地文件的对应关系
+### 5.1 Skills 技能文件（6 个，.trae/skills/）
+
+| 编号 | 文件路径 |
+|------|---------|
+| S1 | `d:\BIMbase\PythonScript\BFAComponentLib\.trae\skills\bimbase-pyp3d-modeling\SKILL.md` |
+| S2 | `d:\BIMbase\PythonScript\BFAComponentLib\.trae\skills\bimbase-pyp3d-function-reference\SKILL.md` |
+| S3 | `d:\BIMbase\PythonScript\BFAComponentLib\.trae\skills\bimbase-agent-geometry-rules\SKILL.md` |
+| S4 | `d:\BIMbase\PythonScript\BFAComponentLib\.trae\skills\bimbase-modeling-agent-interaction\SKILL.md` |
+| S5 | `d:\BIMbase\PythonScript\BFAComponentLib\.trae\skills\bimbase-precise-modeling-interaction\SKILL.md` |
+| S6 | `d:\BIMbase\PythonScript\BFAComponentLib\.trae\skills\bimbase-skills-mcp-overview\SKILL.md` |
+
+### 5.2 MCP 官方 SDK 文档（通过 BIMBaseAI2PY_MCPServer 查询）
+
+不再维护本地 MCP 知识库文件。全部 SDK 文档由 `BIMBaseAI2PY_MCPServer`（远程 `https://dev.pkpm.cn/mcp/`）统一提供，通过 `get_skill_doc` / `get_skill_bundle` 按 symbol 查询。完整 symbol 清单见上文「官方 SDK symbol 清单」。
+
+### 5.3 本地知识库文档（5 个，leder_skills/）
+
+| 编号 | 文件路径 |
+|------|---------|
+| L1 | `d:\BIMbase\PythonScript\BFAComponentLib\leder_skills\BIMBase_Agent几何理解与验证规则.md` |
+| L2 | `d:\BIMbase\PythonScript\BFAComponentLib\leder_skills\BIMBase_AIAgent_建模交互技能.md` |
+| L3 | `d:\BIMbase\PythonScript\BFAComponentLib\leder_skills\BIMBase_几何建模精确交互规范.md` |
+| L4 | `d:\BIMbase\PythonScript\BFAComponentLib\leder_skills\BIMBase_pyp3d_建模方法函数大全.md` |
+| L5 | `d:\BIMbase\PythonScript\BFAComponentLib\leder_skills\BIMBase_Skills_MCP_配置总览.md` |
+
+### 5.4 根目录知识库文档（2 个）
+
+| 编号 | 文件路径 |
+|------|---------|
+| R1 | `d:\BIMbase\PythonScript\BFAComponentLib\SKILL.md` |
+| R2 | `d:\BIMbase\PythonScript\BFAComponentLib\BIMBase_AIAgent_建模指南.md` |
+
+### 5.5 备份路径
+
+| 编号 | 路径 | 说明 |
+|------|------|------|
+| B1 | `E:\个人笔记文件备份\notebook\实习\备份skills+mcp+markdown\skills\` | 备份 Skills 目录 |
+| B2 | `E:\个人笔记文件备份\notebook\实习\备份skills+mcp+markdown\markdown\` | 备份 Markdown 目录 |
+| B3 | `E:\个人笔记文件备份\notebook\实习\目前skills+mcp+md.md` | 当前 skills/mcp/md 汇总文件 |
+
+### 5.6 同步更新规则（必须遵守）
+
+**当用户要求更新 Skills、Markdown 或 MCP 内容时，Agent 必须按以下顺序同步更新：**
+
+1. 更新 `.trae\skills\` 下的 6 个 Skill 文件（编号 S1-S6）
+2. 更新 `leder_skills\` 下的对应文件（编号 L1-L5）
+3. 更新根目录 `SKILL.md` 和 `BIMBase_AIAgent_建模指南.md`（编号 R1-R2）
+4. 更新备份 `skills\` 和 `markdown\` 目录（编号 B1-B2）
+5. 更新 `目前skills+mcp+md.md`（编号 B3）
+6. 更新 `skills+markdown汇总.md`（如有路径变更）
+
+### 5.7 备份文件与本地文件的对应关系
 
 | 备份文件 | 本地 Skill 文件 |
 |---------|---------------|
-| `skills\BIMBase_Agent几何理解与验证规则.md` | `.trae\skills\bimbase-agent-geometry-rules\SKILL.md` |
-| `skills\SKILL.md` | `.trae\skills\bimbase-pyp3d-modeling\SKILL.md` |
-| `skills\BIMBase_AIAgent_建模交互技能.md` | `.trae\skills\bimbase-modeling-agent-interaction\SKILL.md` |
-| `skills\BIMBase_几何建模精确交互规范.md` | `.trae\skills\bimbase-precise-modeling-interaction\SKILL.md` |
-| `skills\BIMBase_pyp3d_建模方法函数大全.md` | `.trae\skills\bimbase-pyp3d-function-reference\SKILL.md` |
-| `skills\BIMBase_Skills_MCP_配置总览.md` | `.trae\skills\bimbase-skills-mcp-overview\SKILL.md` |
+| `skills\BIMBase_Agent几何理解与验证规则.md` | `.trae\skills\bimbase-agent-geometry-rules\SKILL.md` (S3) |
+| `skills\SKILL.md` | `.trae\skills\bimbase-pyp3d-modeling\SKILL.md` (S1) |
+| `skills\BIMBase_AIAgent_建模交互技能.md` | `.trae\skills\bimbase-modeling-agent-interaction\SKILL.md` (S4) |
+| `skills\BIMBase_几何建模精确交互规范.md` | `.trae\skills\bimbase-precise-modeling-interaction\SKILL.md` (S5) |
+| `skills\BIMBase_pyp3d_建模方法函数大全.md` | `.trae\skills\bimbase-pyp3d-function-reference\SKILL.md` (S2) |
+| `skills\BIMBase_Skills_MCP_配置总览.md` | `.trae\skills\bimbase-skills-mcp-overview\SKILL.md` (S6) |
 | `markdown\BIMBase_Agent几何理解与验证规则.md` | 同上 |
 | `markdown\BIMBase_几何建模精确交互规范.md` | 同上 |
 | `markdown\BIMBase_Skills_MCP_配置总览.md` | 同上 |
 | `markdown\BIMBase_pyp3d_建模方法函数大全.md` | 同上 |
-| `markdown\BIMBase_AIAgent_建模指南.md` | 无对应 Skill（纯本地文档） |
-
-### 5.3 同步更新规则（必须遵守）
-
-**同步流程：**
-1. 先更新本地 `.trae\skills\` 下的文件
-2. 再更新本地 `leder_skills\` 下的对应文件
-3. 更新本地 `SKILL.md` 和 `BIMBase_AIAgent_建模指南.md`
-4. 更新备份 `skills\` 下的对应文件
-5. 更新备份 `markdown\` 下的对应文件
-6. 更新 `E:\个人笔记文件备份\notebook\实习\目前skills+mcp+md.md`
-7. 确保所有路径下的文件内容保持一致
+| `markdown\BIMBase_AIAgent_建模指南.md` | 无对应 Skill（纯本地文档 R2） |
 
 ---
+
 ## 配置关系图
 
 ```
@@ -360,13 +362,13 @@ Skills 是 AI Agent 的提示词扩展，通过 markdown 文件导入，对 Agen
 │                                                             │
 │  ┌─ mcp.json 文件配置 ─────────────────────────────────┐    │
 │  │                                                      │    │
-│  │  BIMBaseAI2PY (MCP Command)                          │    │
-│  │  ├─ 运行: Miniconda Python → MCPServer.py            │    │
-│  │  ├─ 知识库: BIMBaseMCP/skill/*.md                    │    │
+│  │  BIMBaseAI2PY_MCPServer (远程 HTTP/SSE)              │    │
+│  │  ├─ 地址: https://dev.pkpm.cn/mcp/                   │    │
+│  │  ├─ 知识库: 官方 SDK 文档（按 symbol 查询）           │    │
 │  │  ├─ 工具: get_summary_document / get_skill_manifest  │    │
 │  │  │        get_skill_doc / get_skill_bundle /         │    │
 │  │  │        get_related_skills                          │    │
-│  │  └─ Prompt: bimbase_modeling_guide()                 │    │
+│  │  └─ 权威性: 建模技术要求以此为准                      │    │
 │  │                                                      │    │
 │  │  Excel (MCP Command, 辅助)                            │    │
 │  │  └─ 7 个 Excel 读写工具                               │    │
@@ -405,5 +407,5 @@ Skills 是 AI Agent 的提示词扩展，通过 markdown 文件导入，对 Agen
 
 > **技术备注：**
 > - BIMBase 建模脚本运行在 **内嵌 Python 3.7.9** (`D:\BIMBase KIT official 2026 R1.0\BIMBase KIT 2026\PythonScript\python-3.7.9-embed-amd64\python.exe`)
-> - MCP 服务器需要 **Python >= 3.10** (`D:\Miniconda\python.exe`)，两者是不同的解释器
+> - MCP 服务 `BIMBaseAI2PY_MCPServer` 为远程服务（`https://dev.pkpm.cn/mcp/`），无需本地 Python 环境
 > - 本文件由 AI Agent 自动生成，随配置变更应同步更新

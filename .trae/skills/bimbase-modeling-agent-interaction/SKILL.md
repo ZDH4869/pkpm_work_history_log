@@ -5,6 +5,10 @@ description: AI Agent 与用户进行 BIMBase pyp3d 建模交互时的行为规�
 
 # BIMBase AI Agent 建模交互技能
 
+> **冲突优先级规则（最高优先级，必须遵守）**
+> 1. **建模技术要求**：本地 skills/markdown 内容若与 `BIMBaseAI2PY_MCPServer` 获取到的建模技术要求（函数签名、参数语义、几何定位语义、编码规范等）发生冲突或解释不同，**以 `BIMBaseAI2PY_MCPServer` 为第一执行准则**。
+> 2. **个人建模喜好**：涉及个人建模喜好（建模定位提示词喜好、特殊模型部件调用，如散热片、半椭球体等）时，**以本地 skills/markdown 为第一执行准则**。
+
 > 本技能定义了 AI Agent 在协助用户在 BIMBase 中通过 Python 建模时应遵循的**信息收集 → 代码生成 → 确认交付**全流程交互规范。
 
 ---
@@ -190,10 +194,9 @@ MCP/知识库检索 → 代码生成 → 自检 → 交付
    ```
    get_summary_document() → get_skill_manifest() → get_skill_bundle([需要的symbol])
    ```
-   - 来源：`D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\`
+   - 来源：`BIMBaseAI2PY_MCPServer`（远程 `https://dev.pkpm.cn/mcp/`）
 
 2. **本地文档方式**：
-   - `D:\01\tyafc-master\tyafc-master\backend\agent\skill_docs\BIMBaseModel\`
    - `D:\BIMbase\PythonScript\BFAComponentLib\SKILL.md`
    - `D:\BIMbase\PythonScript\BFAComponentLib\BIMBase_AIAgent_建模指南.md`
    - `D:\BIMbase\PythonScript\BFAComponentLib\leder_skills\BIMBase_pyp3d_建模方法函数大全.md`
@@ -423,9 +426,9 @@ cd "D:\BIMBase KIT official 2026 R1.0\BIMBase KIT 2026\PythonScript\python-3.7.9
 ## 第五部分：知识库索引
 
 ### MCP 工具链
-| MCP Server | 路径 |
+| MCP Server | 服务地址 |
 |------------|------|
-| BIMBaseAI2PY | `c:\Users\张德海（Jack）\.trae-cn\mcps\s_BFAComponentLib-8911a789\solo_agent\mcp_BIMBaseAI2PY` |
+| BIMBaseAI2PY_MCPServer | `https://dev.pkpm.cn/mcp/`（远程） |
 
 ### 本地文档路径
 | 文档 | 路径 |
@@ -433,8 +436,6 @@ cd "D:\BIMBase KIT official 2026 R1.0\BIMBase KIT 2026\PythonScript\python-3.7.9
 | 建模技能 SKILL.md | [D:\BIMbase\PythonScript\BFAComponentLib\SKILL.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/SKILL.md) |
 | AI Agent 建模指南 | [D:\BIMbase\PythonScript\BFAComponentLib\BIMBase_AIAgent_建模指南.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/BIMBase_AIAgent_建模指南.md) |
 | 建模方法函数大全 | [D:\BIMbase\PythonScript\BFAComponentLib\leder_skills\BIMBase_pyp3d_建模方法函数大全.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/leder_skills/BIMBase_pyp3d_建模方法函数大全.md) |
-| MCP 技能库 | [D:\01\tyafc-master\tyafc-master\BIMBaseMCP\skill\](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/) |
-| Skill Docs | [D:\01\tyafc-master\tyafc-master\backend\agent\skill_docs\BIMBaseModel\](file:///D:/01/tyafc-master/tyafc-master/backend/agent/skill_docs/BIMBaseModel/) |
 
 ### 参考示例路径
 | 类型 | 路径 |

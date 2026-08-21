@@ -5,6 +5,10 @@ description: BIMBase pyp3d 建模方法函数大全。系统整理了所有 pyp3
 
 # BIMBase pyp3d 建模方法函数大全
 
+> **冲突优先级规则（最高优先级，必须遵守）**
+> 1. **建模技术要求**：本地 skills/markdown 内容若与 `BIMBaseAI2PY_MCPServer` 获取到的建模技术要求（函数签名、参数语义、几何定位语义、编码规范等）发生冲突或解释不同，**以 `BIMBaseAI2PY_MCPServer` 为第一执行准则**。
+> 2. **个人建模喜好**：涉及个人建模喜好（建模定位提示词喜好、特殊模型部件调用，如散热片、半椭球体等）时，**以本地 skills/markdown 为第一执行准则**。
+
 > 本文档系统整理了 BIMBase 建模中所有 `pyp3d` 建模方法函数的使用要求、参数设定方法和代码示例。
 > 所有函数接口均以 mm 为单位，角度使用弧度制，采用右手坐标系。
 
@@ -76,7 +80,7 @@ if __name__ == "__main__":                       # 7. 入口
 - 造型逻辑写在 `@export` 装饰的 `replace(self)` 方法中
 - 入口必须 `place(实例)` 才能在视图中显示
 
-> 来源：[SKILL.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/SKILL.md)、[basic_writing_style.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/02_coding_standards_safety/basic_writing_style.md)
+> 来源：[SKILL.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/SKILL.md)、BIMBaseAI2PY_MCPServer → get_skill_doc("basic_writing_style")
 
 ---
 
@@ -108,7 +112,7 @@ self['旋转角度'] = Attr(0, obvious=True, readonly=True)
 self['长方体'] = Attr(None, show=True)
 ```
 
-> 来源：[property_Attr.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/geometric_interface/property_Attr.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("Attr")
 
 ---
 
@@ -130,7 +134,7 @@ cube = scale(100, 200, 50) * Cube()       # 100x200x50 长方体
 cube = translate(500, 0, 0) * scale(100, 200, 50) * Cube()  # 平移+缩放
 ```
 
-> 来源：[geometry_Cube.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/geometric_interface/geometry_Cube.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("Cube")
 > 参考：[Cube参数化.py](file:///D:/BIMbase/PythonScript/BFAComponentLib/参数化组件样例/基本体教学/Cube参数化.py)
 
 ---
@@ -152,7 +156,7 @@ sphere = scale(200) * Sphere()                    # 半径200的球
 sphere = translate(100, 100, 100) * scale(200) * Sphere()  # 平移+缩放
 ```
 
-> 来源：[geometry_Sphere.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/geometric_interface/geometry_Sphere.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("Sphere")
 
 ---
 
@@ -181,45 +185,22 @@ cyl = Cone(Vec3(10000, 0, 0), Vec3(10000, 0, 2000), 1000, 1000).color(1, 0, 0, 0
 frustum = Cone(Vec3(0, 0, 0), Vec3(0, 0, 500), 200, 100)
 ```
 
-> 来源：[geometry_Cone.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/geometric_interface/geometry_Cone.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("Cone")
 
 ---
 
 ### 3.4 Box — 四棱台 / 长方体
 
-**功能：** 创建任意朝向的四棱台，顶底尺寸相同即为棱柱/长方体。
+> ⚠️ **本节无本地 `.py` 参考，函数签名、参数语义与定位规则必须以 `BIMBaseAI2PY_MCPServer` 官方 SDK 文档为准，禁止凭本地记忆写死。**
 
-**接口：**
-```python
-Box(baseOrigin, topOrigin, vectorX, vectorY, baseX, baseY, topX, topY)
-```
+**使用前必须调用 MCP 查询：** `get_skill_doc("Box")`
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `baseOrigin` | Vec3 | 底部原点 |
-| `topOrigin` | Vec3 | 顶部原点 |
-| `vectorX` | Vec3 | 局部 X 方向基矢 |
-| `vectorY` | Vec3 | 局部 Y 方向基矢 |
-| `baseX` | float | 底部 X 方向长度 |
-| `baseY` | float | 底部 Y 方向长度 |
-| `topX` | float | 顶部 X 方向长度 |
-| `topY` | float | 顶部 Y 方向长度 |
+**官方已确认的核心语义（以 MCP 查询结果为准）：**
+- `baseOrigin` / `topOrigin` 是底面/顶面的**角点**（非截面中心），实体沿 `+vectorX`/`+vectorY` 正方向铺开。
+- 上下截面**锚定同一个角**：当 `topX/topY` 与 `baseX/baseY` 不同时，顶面**不会**居中在底面上方，而是缩向锚定角（单边收分的"斜房子"锥度）。
+- 需要「以轴线/中心对齐」的矩形棱台时，推荐改用**中心对称的矩形 `Section + Loft`**（见 4.2 节），锚点语义为形心，收分对称。
 
-**示例：**
-```python
-box = Box(
-    Vec3(0, 0, 0),        # 底面原点
-    Vec3(0, 0, 3000),     # 顶面原点（决定高度=3000）
-    Vec3(1, 0, 0),        # X 方向
-    Vec3(0, 1, 0),        # Y 方向
-    3000, 5000,           # 底面 3000x5000
-    3000, 5000            # 顶面 3000x5000
-).color(1, 1, 0, 0.5)
-```
-
-> **重要提醒**：`Box` 的底面/顶面原点在矩形角点（非形心），定位时需额外计算平移偏移。**对于等截面矩形拉伸体，推荐使用 `Section + Loft` 模式**（见 4.2 节），形心在原点，定位更直观准确。
-
-> 来源：[geometry_Box.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/geometric_interface/geometry_Box.md)
+> 来源：`BIMBaseAI2PY_MCPServer` → `get_skill_doc("Box")`
 
 ---
 
@@ -248,7 +229,7 @@ arc = Arc(Vec3(0,0,0), Vec3(100,100,0), Vec3(0,200,0))  # 三点圆弧
 arc_scaled = scale(100) * Arc(pi * 2)              # 半径100的圆
 ```
 
-> 来源：[geometry_Arc.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/geometric_interface/geometry_Arc.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("Arc")
 
 ---
 
@@ -271,7 +252,7 @@ line3d = Line(Vec3(0,0,0), Vec3(100,0,25), Vec3(0,100,50))
 line2d = Line(Vec2(0,0), Vec2(100,0), Vec2(0,100))
 ```
 
-> 来源：[geometry_Line.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/geometric_interface/geometry_Line.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("Line")
 
 ---
 
@@ -305,7 +286,7 @@ line = Line(Vec3(0,0,0), Vec3(0,0,20))
 text3d = Sweep(text, line).color(0, 0, 1, 1)
 ```
 
-> 来源：[geometry_Text.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/geometric_interface/geometry_Text.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("Text")
 
 ---
 
@@ -361,7 +342,7 @@ sectionHole = Section(Vec2(80,80), Vec2(60,80), Vec2(60,60), Vec2(80,60))
 combined = sectionOut - sectionHole   # 带矩形孔的截面
 ```
 
-> 来源：[geometry_Section.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/geometric_interface/geometry_Section.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("Section")
 > 参考：[Section参数化.py](file:///D:/BIMbase/PythonScript/BFAComponentLib/参数化组件样例/基本体教学/Section参数化.py)
 
 ---
@@ -416,7 +397,7 @@ spring = Loft(*sections)
 spring.smooth = True                                 # 启用平滑
 ```
 
-> 来源：[geometry_Loft.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/geometric_interface/geometry_Loft.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("Loft")
 > 参考：[Loft参数化.py](file:///D:/BIMbase/PythonScript/BFAComponentLib/参数化组件样例/基本体教学/Loft参数化.py)、[弹簧.py](file:///D:/BIMbase/PythonScript/BFAComponentLib/参数化组件样例/造型构件/弹簧.py)
 
 ---
@@ -459,7 +440,7 @@ line = Line(Arc(pi/2))
 sweep = Sweep(sectionOut - sectionHole, line)             # 带矩形孔的管
 ```
 
-> 来源：[geometry_Sweep.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/geometric_interface/geometry_Sweep.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("Sweep")
 > 参考：[Sweep参数化.py](file:///D:/BIMbase/PythonScript/BFAComponentLib/参数化组件样例/基本体教学/Sweep参数化.py)
 
 ---
@@ -480,7 +461,7 @@ group = combine(part1, part2, part3)
 transformed_group = translate(100, 0, 0) * group
 ```
 
-> 来源：[geometry_Combine.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/geometric_interface/geometry_Combine.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("Combine")
 > 参考：[Combine参数化.py](file:///D:/BIMbase/PythonScript/BFAComponentLib/参数化组件样例/基本体教学/Combine参数化.py)
 
 ---
@@ -506,7 +487,7 @@ result = (box_a - box_b).color(0, 0.7, 0, 1)
 result = Intersect(box_a, box_b).color(0, 0, 1, 1)
 ```
 
-> 来源：[geometry_Bool.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/geometric_interface/geometry_Bool.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("Bool")
 > 参考：[Fusion参数化.py](file:///D:/BIMbase/PythonScript/BFAComponentLib/参数化组件样例/基本体教学/Fusion参数化.py)、[Intersect参数化.py](file:///D:/BIMbase/PythonScript/BFAComponentLib/参数化组件样例/基本体教学/Intersect参数化.py)
 
 ---
@@ -536,7 +517,7 @@ for i in linspace(0, pi*2*11/12, 12):
     points.append(translate(Vec3(R*cos(i), R*sin(i), 0)))
 ```
 
-> 来源：[geometry_Linspace.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/geometric_interface/geometry_Linspace.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("Linspace")
 
 ---
 
@@ -581,7 +562,7 @@ result = translate(100, 0, 0) * scale(500, 200, 400) * Cube()
 result = translate(1000, 0, 0) * rotate(Vec3(0,0,1), pi/2) * scale(500,200,400) * Cube()
 ```
 
-> 来源：[matrix_interface.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/matrix_interface.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("matrix_interface")
 > 参考：[旋转平移.py](file:///D:/BIMbase/PythonScript/BFAComponentLib/参数化组件样例/基本体教学/旋转平移.py)
 
 ---
@@ -606,7 +587,7 @@ TwoPointPlace.linearize(FinalGeometry, '长')
 place(FinalGeometry)
 ```
 
-> 来源：[place_interface.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/place_interface.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("PlaceInterface")
 > 参考：[两点布置.py](file:///D:/BIMbase/PythonScript/BFAComponentLib/参数化组件样例/基本体教学/两点布置.py)
 
 ---
@@ -677,7 +658,7 @@ class myPart(Component):
         self.replace()
 ```
 
-> 来源：[drive_point_interface.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/drive_point_interface.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("DrivePointInterface")
 
 ### 表达式编写规则（经实验验证）
 
@@ -719,7 +700,7 @@ geom.color(R, G, B, Alpha)
 
 **注意：** 布尔运算后会抹除颜色，需重新设置。
 
-> 来源：[geometry_Color.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/01_sdk_interface_guide/geometric_interface/geometry_Color.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("Color")
 
 ---
 
@@ -731,7 +712,7 @@ geom.color(R, G, B, Alpha)
 
 通过逐层 Loft 放样椭圆截面实现。t ∈ [-1, 1] 覆盖完整椭球（两端缩为点）。
 
-> 来源：[custom_Ellipsoid.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/04_custom_components/custom_Ellipsoid.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("custom_Ellipsoid")
 > 参考：[SKILL.md 椭球体模板](file:///D:/BIMbase/PythonScript/BFAComponentLib/SKILL.md#L136-L178)
 
 ### 9.1b 半椭球体（底面椭圆截面，高度拉伸）
@@ -797,7 +778,7 @@ path = Line(Arc(2.0 * pi))
 torus = Sweep(section_3d, path)
 ```
 
-> 来源：[custom_CircularTorus.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/04_custom_components/custom_CircularTorus.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("custom_CircularTorus")
 
 ### 9.3 方形截面圆环
 
@@ -815,7 +796,7 @@ section_3d = rotate(Vec3(1, 0, 0), -0.5 * pi) * section_2d
 torus = Sweep(section_3d, Line(Arc(2.0 * pi)))
 ```
 
-> 来源：[custom_SquareTorus.md](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/04_custom_components/custom_SquareTorus.md)
+> 来源：BIMBaseAI2PY_MCPServer → get_skill_doc("custom_SquareTorus")
 
 ---
 
@@ -995,7 +976,7 @@ if __name__ == "__main__":
 > **知识库来源：**
 > - [SKILL.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/SKILL.md)
 > - [BIMBase_AIAgent_建模指南.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/BIMBase_AIAgent_建模指南.md)
-> - [BIMBaseMCP/skill/](file:///D:/01/tyafc-master/tyafc-master/BIMBaseMCP/skill/)
+> - BIMBaseAI2PY_MCPServer（远程 `https://dev.pkpm.cn/mcp/`，通过 `get_skill_doc`/`get_skill_bundle` 查询官方 SDK 文档）
 > - [参数化组件样例/基本体教学](file:///D:/BIMbase/PythonScript/BFAComponentLib/参数化组件样例/基本体教学)
 > - [参数化组件样例/造型构件](file:///D:/BIMbase/PythonScript/BFAComponentLib/参数化组件样例/造型构件)
 > - [参数化组件样例/自建/建模方法分析.md](file:///D:/BIMbase/PythonScript/BFAComponentLib/参数化组件样例/自建/建模方法分析.md)
