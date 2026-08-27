@@ -10,26 +10,25 @@ class 支撑排架(Component):
         self['设备名称'] = Attr('支撑排架', obvious=True, readonly=False, group='专业属性')
 
         # 排架几何参数（排架矩形截面：长=X方向，宽=Y方向，形心位于全局原点）
-        self['排架长度'] = Attr(500, obvious=True, group='几何属性')
-        self['排架宽度'] = Attr(800, obvious=True, group='几何属性')
-        self['排架高度'] = Attr(1000, obvious=True, group='几何属性')
-        self['底部水平支撑柱高度'] = Attr(300, obvious=True, group='几何属性')
+        self['排架长度'] = Attr(500, obvious=True, group='排架')
+        self['排架宽度'] = Attr(800, obvious=True, group='排架')
+        self['排架高度'] = Attr(1000, obvious=True, group='排架')
+        self['中部排架高度'] = Attr(300, obvious=True, group='排架')
 
         # L型角钢截面参数（水平距离=X方向肢长，竖向高度=Y方向肢长，厚度=截面宽度）
-        self['L型截面水平距离'] = Attr(40, obvious=True, group='几何属性')
-        self['L型截面竖向高度'] = Attr(40, obvious=True, group='几何属性')
-        self['L型截面厚度'] = Attr(10, obvious=True, group='几何属性')
-        self['L型截面倒角半径'] = Attr(8, obvious=True, group='几何属性')
+        self['等直角钢边长'] = Attr(40, obvious=True, group='角钢截面')
+        self['厚度'] = Attr(10, obvious=True, group='角钢截面')
+        self['倒角半径'] = Attr(8, obvious=True, group='角钢截面')
 
         # 支撑间距参数
-        self['底部水平支撑柱间距'] = Attr(200, obvious=True, group='几何属性')
-        self['竖向支撑柱间距'] = Attr(500, obvious=True, group='几何属性')
-        self['水平支撑柱Z间距'] = Attr(300, obvious=True, group='几何属性')
+        self['中部水平柱间距'] = Attr(200, obvious=True, group='支撑柱')
+        self['竖向支撑柱间距'] = Attr(500, obvious=True, group='支撑柱')
+        self['背面水平柱Z间距'] = Attr(300, obvious=True, group='支撑柱')
 
         # 箱体参数
-        self['箱体长度'] = Attr(150, obvious=True, group='几何属性')
-        self['箱体宽度'] = Attr(150, obvious=True, group='几何属性')
-        self['箱体高度'] = Attr(300, obvious=True, group='几何属性')
+        self['箱体长度_顶部水平柱x间距'] = Attr(150, obvious=True, group='箱体')
+        self['箱体宽度_顶部水平柱y间距'] = Attr(150, obvious=True, group='箱体')
+        self['箱体高度'] = Attr(300, obvious=True, group='箱体')
 
         self['模型'] = Attr(None, show=True)
         self.replace()
@@ -40,16 +39,16 @@ class 支撑排架(Component):
         L    = self['排架长度']             # 排架矩形长度（X方向）
         W    = self['排架宽度']             # 排架矩形宽度（Y方向）
         H    = self['排架高度']             # 排架高度（Z方向）
-        Hb   = self['底部水平支撑柱高度']     # 底部水平支撑柱所在高度
-        hL   = self['L型截面水平距离']       # L型截面水平肢长度
-        vL   = self['L型截面竖向高度']       # L型截面竖向肢高度
-        tL   = self['L型截面厚度']          # L型截面厚度（截面宽度）
-        rL   = self['L型截面倒角半径']       # L型截面内拐角倒角半径
-        底部水平间距 = self['底部水平支撑柱间距']
+        Hb   = self['中部排架高度']     # 底部水平支撑柱所在高度
+        hL   = self['等直角钢边长']       # L型截面水平肢长度
+        vL   = hL                        # L型截面竖向肢高度
+        tL   = self['厚度']              # L型截面厚度（截面宽度）
+        rL   = self['倒角半径']          # L型截面内拐角倒角半径
+        底部水平间距 = self['中部水平柱间距']
         竖向柱间距   = self['竖向支撑柱间距']
-        水平柱Z间距  = self['水平支撑柱Z间距']
-        箱体长 = self['箱体长度']
-        箱体宽 = self['箱体宽度']
+        水平柱Z间距  = self['背面水平柱Z间距']
+        箱体长 = self['箱体长度_顶部水平柱x间距']
+        箱体宽 = self['箱体宽度_顶部水平柱y间距']
         箱体高 = self['箱体高度']
 
         # ============================== 参数校验 ==============================
