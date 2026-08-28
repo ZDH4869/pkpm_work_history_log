@@ -48,6 +48,11 @@ description: BIMBase Python 建模 Skills & MCP 配置总览。汇总当前环�
   │    ├─ BIMBaseAI2PY_MCPServer: get_summary_document() → 首次建模必调，了解全部可用 SDK
   │    └─ BIMBaseAI2PY_MCPServer: get_skill_manifest()   → 获取结构化 symbol 索引
   │
+  ├─► 阶段A2：需求对齐与复杂度确认（编码前强制）
+  │    ├─ 部件理解对齐：图片解析/提示词拆解 → 识别不清处盘问确认（grill-me 逻辑）
+  │    ├─ 图片识别结果汇报模板（6 段）：总体信息/尺寸表格/建模部件清单/尺寸信息/属性业务信息/疑惑点
+  │    └─ 建模精细/复杂度确认：结构化多选话术，是否简化（给出简化方案供选；明确要求"复刻/按图片/按提示词"时跳过）
+  │
   ├─► 阶段B：几何体构建（第一阶段，目标 1 次对话）
   │    ├─ BIMBaseAI2PY_MCPServer: get_skill_bundle([所需API]) → 批量获取 API 文档（自动带编码规范）
   │    ├─ Read: BIMBase_pyp3d_建模方法函数大全.md   → 函数详细用法与示例

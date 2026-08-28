@@ -23,4 +23,8 @@
 
 ## 建模流程调用指南
 
-1. 理解需求 → 2. `get_summary_document()` → 3. `get_skill_manifest()` → 4. 规划 API → 5. `get_skill_bundle()` → 6. 编码 → 7. 自检
+1. 输入(图片/文字) → 2. 部件理解（图片解析/提示词拆解） → 3. 理解不清处盘问对齐（grill-me 逻辑） → 4. 复杂度确认（是否简化） → 5. `get_summary_document()` → 6. `get_skill_manifest()` → 7. 规划 API → 8. `get_skill_bundle()` → 9. 输出建模参数确认表 → 10. 编码 → 11. 自检
+
+> 图片识别结果汇报模板（6 段）：①总体信息 ②尺寸表格 ③建模部件清单 ④尺寸信息 ⑤属性业务信息（模型名称/各部件名称/材质） ⑥疑惑点。提问话术：header + options(label+description) + multiSelect。
+
+> 复杂度确认例外：用户明确要求"复刻/按图片尺寸/按建模提示词"时跳过第 4 步。
